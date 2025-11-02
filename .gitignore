@@ -1,0 +1,67 @@
+# Archivos de configuración sensibles
+.env
+.env.local
+.env.production
+
+# Dependencias
+/vendor/
+node_modules/
+
+# Logs
+*.log
+/logs/
+/storage/logs/
+
+# Cache
+/cache/
+/tmp/
+*.cache
+
+# Uploads y archivos temporales
+/public/uploads/
+/storage/uploads/
+*.tmp
+
+# Configuraciones locales
+config/local.php
+config/database.local.php
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Composer
+composer.phar
+composer.lock
+
+# NPM
+package-lock.json
+yarn.lock
+
+# Tests
+/phpunit.xml
+/coverage/
+
+# Documentación generada
+/docs/build/
+
+# Archivos de base de datos de desarrollo
+*.sqlite
+*.sqlite3
+
+# Archivos específicos del proyecto
+/debug/
+/temp/

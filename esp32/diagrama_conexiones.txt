@@ -1,0 +1,99 @@
+/*
+ * Diagrama de Conexiones ASCII
+ * Sistema de Control de Asistencia ESP32
+ */
+
+                              ESP32 DevKit v1
+                         ┌─────────────────────────┐
+                         │                         │
+                    3.3V │○ 3V3                D0 ○│ 
+                         │                     D1 ○│ 
+                         │                     D2 ○│──────┬─ LED Verde (220Ω) ── GND
+                         │                     D3 ○│      │
+                         │                     D4 ○│──────┼─ LED Rojo (220Ω) ── GND
+           MFRC522 RST ──│○ D22                D5 ○│──────┼─ MFRC522 SDA
+                         │                     D6 ○│      │
+                         │                     D7 ○│      │
+                         │                     D8 ○│      │
+                         │                     D9 ○│      │
+                         │                    D10 ○│      │
+                         │                    D11 ○│      │
+                         │                    D12 ○│      │
+                         │                    D13 ○│      │
+                         │                    D14 ○│      │
+                         │                    D15 ○│      │
+        LED Azul (220Ω) ──│○ D16               D17 ○│──────┼─ Buzzer (+)
+          MFRC522 SCK ───│○ D18               D19 ○│──────┼─ MFRC522 MISO
+                         │                    D21 ○│      │
+                         │                    D22 ○│      │
+         MFRC522 MOSI ───│○ D23               GND ○│──────┴─ GND común
+                         │                         │
+                         │                    VIN ○│ 5V (opcional)
+                         │                    GND ○│
+                         │                   3.3V ○│
+                         │                    EN  ○│
+                         │                    VP  ○│
+                         │                    VN  ○│
+                         └─────────────────────────┘
+
+     
+          MFRC522 RFID Reader Module
+         ┌─────────────────────────┐
+         │  ┌─────────────────┐    │
+         │  │    ANTENNA      │    │ ← Área de lectura de tarjetas
+         │  └─────────────────┘    │
+         │                         │
+         │ SDA SCK MOSI MISO IRQ   │
+         │  ○   ○   ○    ○    ○    │
+         │ GND RST 3.3V            │
+         │  ○   ○   ○              │
+         └─────────────────────────┘
+              │   │   │
+              │   │   └─ 3.3V ESP32
+              │   └─ D22 ESP32 (RST)  
+              └─ GND ESP32
+
+Conexiones MFRC522:
+SDA  → D5  (ESP32)
+SCK  → D18 (ESP32) 
+MOSI → D23 (ESP32)
+MISO → D19 (ESP32)
+IRQ  → No conectar
+GND  → GND (ESP32)
+RST  → D22 (ESP32)
+3.3V → 3.3V (ESP32)
+
+Componentes adicionales:
+- LEDs con resistencias de 220Ω
+- Buzzer piezo eléctrico
+- Cables jumper macho-macho
+- Protoboard (opcional)
+
+Alimentación:
+- USB: 5V desde puerto USB del ESP32
+- Externo: 5V/1A mediante jack o VIN
+
+Notas importantes:
+1. NUNCA alimentar MFRC522 con 5V (solo 3.3V)
+2. Las resistencias en los LEDs son obligatorias
+3. El buzzer es polarizado (+ y -)
+4. Verificar continuidad antes de alimentar
+
+                 ┌─── WiFi Router ───┐
+                 │                   │
+                 │  Red 2.4GHz      │
+                 │  WPA2/WPA3       │
+                 └───────┬───────────┘
+                         │ WiFi
+                         │
+                 ┌───────▼───────┐
+                 │     ESP32     │ ◄─── Tarjeta RFID
+                 │   + MFRC522   │
+                 └───────┬───────┘
+                         │ HTTP/API
+                         │
+                 ┌───────▼───────┐
+                 │   Servidor    │
+                 │  PHP + MySQL  │
+                 │   (Backend)   │
+                 └───────────────┘

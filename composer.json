@@ -1,0 +1,52 @@
+{
+  "name": "control-asistencia/sistema",
+  "description": "Sistema de Control de Asistencia con ESP32 y RFID",
+  "type": "project",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Sistema Control Asistencia",
+      "email": "admin@empresa.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Config\\": "config/"
+    },
+    "files": [
+      "config/bootstrap.php"
+    ]
+  },
+  "require": {
+    "php": ">=8.0",
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-json": "*",
+    "ext-curl": "*",
+    "ext-mbstring": "*",
+    "ext-openssl": "*",
+    "phpmailer/phpmailer": "^6.8",
+    "firebase/php-jwt": "^6.8",
+    "mpdf/mpdf": "^8.1",
+    "phpoffice/phpspreadsheet": "^1.29"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "squizlabs/php_codesniffer": "^3.6",
+    "phpstan/phpstan": "^1.8"
+  },
+  "scripts": {
+    "test": "phpunit",
+    "cs-check": "phpcs --standard=PSR12 app/",
+    "cs-fix": "phpcbf --standard=PSR12 app/",
+    "analyse": "phpstan analyse app/"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

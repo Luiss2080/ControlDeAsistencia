@@ -1,0 +1,40 @@
+{
+  "name": "sistema-control-asistencia",
+  "version": "1.0.0",
+  "description": "Sistema de Control de Asistencia con ESP32 y RFID",
+  "main": "public/index.php",
+  "scripts": {
+    "dev": "php -S localhost:8000 -t public/",
+    "test": "php tests/SystemTest.php",
+    "install-deps": "composer install",
+    "build": "echo 'No build process needed for PHP'",
+    "start": "php -S localhost:8000 -t public/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tu-usuario/sistema-control-asistencia.git"
+  },
+  "keywords": [
+    "php",
+    "esp32",
+    "rfid",
+    "asistencia",
+    "control",
+    "empleados",
+    "mvc",
+    "mysql"
+  ],
+  "author": "Tu Nombre",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tu-usuario/sistema-control-asistencia/issues"
+  },
+  "homepage": "https://github.com/tu-usuario/sistema-control-asistencia#readme",
+  "devDependencies": {
+    "browser-sync": "^2.29.3"
+  },
+  "engines": {
+    "php": ">=8.0",
+    "mysql": ">=5.7"
+  }
+}
