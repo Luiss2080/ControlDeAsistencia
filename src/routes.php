@@ -65,14 +65,27 @@ class Router {
         $metodo = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         
+        // DEBUG: Mostrar información de la ruta
+        if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+            echo "<!-- DEBUG ROUTER: Método=$metodo, URI original=$uri -->\n";
+        }
+        
         // Normalizar la URI removiendo el path base de XAMPP
         $uri = str_replace('/ControlDeAsistencia', '', $uri);
         $uri = str_replace('/public', '', $uri);
         $uri = rtrim($uri, '/');
         if (empty($uri)) $uri = '/';
         
+        // DEBUG: Mostrar URI normalizada
+        if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+            echo "<!-- DEBUG ROUTER: URI normalizada=$uri -->\n";
+        }
+        
         // Buscar ruta exacta
         if (isset($this->routes[$metodo][$uri])) {
+            if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
+                echo "<!-- DEBUG ROUTER: Ruta exacta encontrada -->\n";
+            }
             $this->ejecutarControlador($this->routes[$metodo][$uri], []);
             return;
         }

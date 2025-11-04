@@ -248,10 +248,10 @@ ob_start();
                             </div>
                             <div class="flex-grow-1">
                                 <div class="small font-weight-bold">
-                                    <?= htmlspecialchars($actividad['usuario_nombre']) ?>
+                                    <?= htmlspecialchars($actividad['usuario_nombre'] ?? 'Usuario desconocido') ?>
                                 </div>
                                 <div class="small text-muted">
-                                    <?= ucfirst($actividad['tipo']) ?> - <?= htmlspecialchars($actividad['ubicacion']) ?>
+                                    <?= ucfirst($actividad['tipo']) ?> - <?= htmlspecialchars($actividad['ubicacion'] ?? 'Ubicación no especificada') ?>
                                 </div>
                                 <div class="small text-muted">
                                     <?= date('H:i:s', strtotime($actividad['fecha_hora'])) ?>

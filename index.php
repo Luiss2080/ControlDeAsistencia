@@ -4,50 +4,88 @@
  * Sistema de Control de Asistencia
  */
 
+// Activar errores para debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Incluir configuración
 require_once __DIR__ . '/config/bootstrap.php';
 
 // Incluir el archivo de rutas
 require_once __DIR__ . '/src/routes.php';
 
-// Crear router y procesar la ruta
+// Obtener la ruta actual
+$requestUri = $_SERVER['REQUEST_URI'];
+$requestMethod = $_SERVER['REQUEST_METHOD'];
+
+// Normalizar la URI
+$uri = parse_url($requestUri, PHP_URL_PATH);
+$uri = str_replace('/ControlDeAsistencia', '', $uri);
+$uri = rtrim($uri, '/');
+if (empty($uri)) $uri = '/';
+
+// Enrutamiento simple y directo
 try {
-    $router = new Router();
-    $router->procesarRuta();
+    if ($requestMethod === 'GET') {
+        switch ($uri) {
+            case '/':
+            case '/login':
+                $controller = new \App\Controllers\AuthController();
+                $controller->mostrarLogin();
+                break;
+                
+            case '/admin':
+            case '/admin/dashboard':
+                \App\Controllers\AuthController::requerirRol('admin');
+                $controller = new \App\Controllers\AdminController();
+                $controller->dashboard();
+                break;
+                
+            case '/rrhh':
+            case '/rrhh/dashboard':
+                \App\Controllers\AuthController::requerirRol('rrhh');
+                $controller = new \App\Controllers\RRHHController();
+                $controller->dashboard();
+                break;
+                
+            case '/empleado':
+            case '/empleado/dashboard':
+                \App\Controllers\AuthController::requerirRol('empleado');
+                $controller = new \App\Controllers\EmpleadoController();
+                $controller->dashboard();
+                break;
+                
+            case '/logout':
+                $controller = new \App\Controllers\AuthController();
+                $controller->logout();
+                break;
+                
+            default:
+                http_response_code(404);
+                echo '<h1>404 - Página no encontrada</h1>';
+                echo '<p>La ruta "' . htmlspecialchars($uri) . '" no existe.</p>';
+                echo '<a href="/ControlDeAsistencia/">Volver al inicio</a>';
+        }
+    } elseif ($requestMethod === 'POST') {
+        switch ($uri) {
+            case '/login':
+                $controller = new \App\Controllers\AuthController();
+                $controller->procesarLogin();
+                break;
+                
+            default:
+                http_response_code(405);
+                echo '<h1>405 - Método no permitido</h1>';
+        }
+    }
     
 } catch (Exception $e) {
     // Log del error
     error_log("Error en router: " . $e->getMessage());
     
     // Mostrar error en modo debug
-    if (($_ENV['APP_DEBUG'] ?? false) === 'true') {
-        echo "<h1>Error en el sistema</h1>";
-        echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";
-        echo "<p>Archivo: " . $e->getFile() . ":" . $e->getLine() . "</p>";
-        echo "<pre>" . $e->getTraceAsString() . "</pre>";
-    } else {
-        // En producción, mostrar página de error amigable
-        http_response_code(500);
-        echo '<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Sistema de Asistencia</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #e74c3c; margin-bottom: 20px; }
-        .btn { background: #3498db; color: white; padding: 12px 24px; border: none; border-radius: 5px; text-decoration: none; display: inline-block; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>⚠️ Error del Sistema</h1>
-        <p>Lo sentimos, ha ocurrido un error interno. Por favor, intenta nuevamente.</p>
-        <a href="/ControlDeAsistencia/" class="btn">🏠 Volver al inicio</a>
-    </div>
-</body>
-</html>';
-    }
+    echo "<h1>Error en el sistema</h1>";
+    echo "<p>Error: " . htmlspecialchars($e->getMessage()) . "</p>";
+    echo "<p>Archivo: " . $e->getFile() . ":" . $e->getLine() . "</p>";
+    echo "<pre>" . $e->getTraceAsString() . "</pre>";
 }

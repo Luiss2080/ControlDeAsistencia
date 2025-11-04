@@ -37,14 +37,20 @@ ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 
 // Autoloader simple
 spl_autoload_register(function ($class) {
+    // Convertir namespace a path
     $class = str_replace('\\', DIRECTORY_SEPARATOR, $class);
-    // Buscar las clases a partir de la raíz del proyecto
+    $class = str_replace('App' . DIRECTORY_SEPARATOR, 'app' . DIRECTORY_SEPARATOR, $class);
+    
+    // Buscar archivo desde la raíz del proyecto
     $projectRoot = dirname(__DIR__);
-    $file = $projectRoot . DIRECTORY_SEPARATOR . str_replace('App' . DIRECTORY_SEPARATOR, 'app' . DIRECTORY_SEPARATOR, $class) . '.php';
+    $file = $projectRoot . DIRECTORY_SEPARATOR . $class . '.php';
     
     if (file_exists($file)) {
         require_once $file;
+        return true;
     }
+    
+    return false;
 });
 
 // Inicializar sesión

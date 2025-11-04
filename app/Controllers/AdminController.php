@@ -884,13 +884,15 @@ class AdminController {
     private function obtenerActividadReciente() {
         return $this->db->fetchAll("
             SELECT 
-                l.descripcion,
-                l.created_at,
-                u.nombres,
-                u.apellidos
-            FROM logs_sistema l
-            LEFT JOIN usuarios u ON l.usuario_id = u.id
-            ORDER BY l.created_at DESC
+                a.fecha_hora,
+                a.tipo,
+                CONCAT(u.nombres, ' ', u.apellidos) as usuario_nombre,
+                d.ubicacion,
+                d.nombre as dispositivo_nombre
+            FROM asistencias a
+            LEFT JOIN usuarios u ON a.usuario_id = u.id
+            LEFT JOIN dispositivos d ON a.dispositivo_id = d.id
+            ORDER BY a.fecha_hora DESC
             LIMIT 10
         ");
     }
