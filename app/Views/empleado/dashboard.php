@@ -1,249 +1,273 @@
 <?php
-$contenido = '
+/**
+ * Dashboard del Empleado
+ * Sistema de Control de Asistencia
+ */
+
+$titulo = 'Mi Panel de Empleado';
+$seccion = 'Dashboard Personal';
+ob_start();
+?>
+
 <!-- Estado del día -->
-<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
-    <h2 style="margin-bottom: 15px;">👋 ¡Hola, ' . htmlspecialchars($usuario['nombre']) . '!</h2>
-    <div style="font-size: 18px; margin-bottom: 10px;">📅 ' . date('l, d \d\e F \d\e Y') . '</div>';
-
-if ($asistencia_hoy) {
-    $estado_emoji = '';
-    $estado_texto = '';
-    $estado_color = '';
+<div class="welcome-header">
+    <h2 class="welcome-title"><i class="fas fa-hand-wave"></i> ¡Hola, <?php echo htmlspecialchars($usuario['nombre']); ?>!</h2>
+    <div class="welcome-date"><i class="fas fa-calendar-day"></i> <?php echo date('l, d \d\e F \d\e Y'); ?></div>
     
-    switch ($asistencia_hoy['estado']) {
-        case 'puntual':
-            $estado_emoji = '✅';
-            $estado_texto = 'Llegaste puntual';
-            $estado_color = '#27ae60';
-            break;
-        case 'tardanza':
-            $estado_emoji = '⚠️';
-            $estado_texto = 'Llegaste tarde';
-            $estado_color = '#f39c12';
-            break;
-    }
-    
-    $contenido .= '
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-top: 15px;">
-        <div style="font-size: 24px; margin-bottom: 5px;">' . $estado_emoji . '</div>
-        <div style="font-size: 16px; font-weight: bold;">' . $estado_texto . '</div>
-        <div style="font-size: 14px; opacity: 0.9;">Hora de entrada: ' . date('H:i', strtotime($asistencia_hoy['hora_entrada'])) . '</div>
-    </div>';
-} else {
-    $contenido .= '
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-top: 15px;">
-        <div style="font-size: 24px; margin-bottom: 5px;">❓</div>
-        <div style="font-size: 16px; font-weight: bold;">Aún no has marcado asistencia hoy</div>
-        <div style="font-size: 14px; opacity: 0.9;">Recuerda pasar tu tarjeta por el lector</div>
-    </div>';
-}
-
-$contenido .= '
+    <?php if ($asistencia_hoy): ?>
+        <?php
+        $estado_emoji = '';
+        $estado_texto = '';
+        $estado_color = '';
+        
+        switch ($asistencia_hoy['estado']) {
+            case 'puntual':
+                $estado_emoji = '<i class="fas fa-check-circle"></i>';
+                $estado_texto = 'Llegaste puntual';
+                $estado_color = '#27ae60';
+                break;
+            case 'tardanza':
+                $estado_emoji = '<i class="fas fa-exclamation-triangle"></i>';
+                $estado_texto = 'Llegaste tarde';
+                $estado_color = '#f39c12';
+                break;
+        }
+        ?>
+        <div class="status-card">
+            <div class="status-icon"><?php echo $estado_emoji; ?></div>
+            <div class="status-text"><?php echo $estado_texto; ?></div>
+            <div class="status-detail">Hora de entrada: <?php echo date('H:i', strtotime($asistencia_hoy['hora_entrada'])); ?></div>
+        </div>
+    <?php else: ?>
+        <div class="status-card">
+            <div class="status-icon"><i class="fas fa-question-circle"></i></div>
+            <div class="status-text">Aún no has marcado asistencia hoy</div>
+            <div class="status-detail">Recuerda pasar tu tarjeta por el lector</div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <!-- Estadísticas del mes -->
 <div class="stats-grid">
     <div class="stat-card success">
-        <div class="stat-number">' . ($stats['mes_actual']['total_asistencias'] ?? 0) . '</div>
-        <div class="stat-label">📅 Días Trabajados</div>
+        <div class="stat-number"><?php echo ($stats['mes_actual']['total_asistencias'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-calendar-check"></i> Días Trabajados</div>
     </div>
     <div class="stat-card">
-        <div class="stat-number">' . ($stats['mes_actual']['puntuales'] ?? 0) . '</div>
-        <div class="stat-label">✅ Días Puntuales</div>
+        <div class="stat-number"><?php echo ($stats['mes_actual']['puntuales'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-check-circle"></i> Días Puntuales</div>
     </div>
     <div class="stat-card warning">
-        <div class="stat-number">' . ($stats['mes_actual']['tardanzas'] ?? 0) . '</div>
-        <div class="stat-label">⚠️ Tardanzas</div>
+        <div class="stat-number"><?php echo ($stats['mes_actual']['tardanzas'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-exclamation-triangle"></i> Tardanzas</div>
     </div>
     <div class="stat-card danger">
-        <div class="stat-number">' . ($stats['racha_puntual'] ?? 0) . '</div>
-        <div class="stat-label">🔥 Racha Puntual</div>
+        <div class="stat-number"><?php echo ($stats['racha_puntual'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-fire"></i> Racha Puntual</div>
     </div>
 </div>
 
 <!-- Información personal y tarjeta -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">👤 Mi Información</h3>
-        <div style="line-height: 1.8;">
-            <p><strong>📧 Email:</strong> ' . htmlspecialchars($usuario['email']) . '</p>
-            <p><strong>💼 Puesto:</strong> ' . htmlspecialchars($usuario['puesto'] ?? 'No especificado') . '</p>
-            <p><strong>📞 Teléfono:</strong> ' . htmlspecialchars($usuario['telefono'] ?? 'No registrado') . '</p>
-            <p><strong>🕐 Promedio de Llegada:</strong> ' . ($stats['promedio_llegada'] ?? '00:00') . '</p>
+<div class="info-grid">
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-user"></i> Mi Información</h6>
+        </div>
+        <div class="card-body">
+            <div class="info-line">
+                <p><strong><i class="fas fa-envelope"></i> Email:</strong> <?php echo htmlspecialchars($usuario['email']); ?></p>
+                <p><strong><i class="fas fa-briefcase"></i> Puesto:</strong> <?php echo htmlspecialchars($usuario['puesto'] ?? 'No especificado'); ?></p>
+                <p><strong><i class="fas fa-phone"></i> Teléfono:</strong> <?php echo htmlspecialchars($usuario['telefono'] ?? 'No registrado'); ?></p>
+                <p><strong><i class="fas fa-clock"></i> Promedio de Llegada:</strong> <?php echo ($stats['promedio_llegada'] ?? '00:00'); ?></p>
+            </div>
         </div>
     </div>
     
-    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">🏷️ Mi Tarjeta RFID</h3>';
-
-if ($tarjeta) {
-    $estado_tarjeta = $tarjeta['activa'] ? '🟢 Activa' : '🔴 Inactiva';
-    $contenido .= '
-        <div style="line-height: 1.8;">
-            <p><strong>🆔 UID:</strong> <code>' . htmlspecialchars($tarjeta['uid']) . '</code></p>
-            <p><strong>📊 Estado:</strong> ' . $estado_tarjeta . '</p>
-            <p><strong>📅 Registrada:</strong> ' . date('d/m/Y', strtotime($tarjeta['fecha_registro'])) . '</p>
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-id-card"></i> Mi Tarjeta RFID</h6>
         </div>
-        <div style="background: #e8f5e8; padding: 10px; border-radius: 6px; margin-top: 15px; border-left: 4px solid #27ae60;">
-            <small style="color: #27ae60;">✅ Tu tarjeta está configurada correctamente</small>
-        </div>';
-} else {
-    $contenido .= '
-        <div style="background: #ffeaa7; padding: 15px; border-radius: 8px; border-left: 4px solid #fdcb6e;">
-            <p style="color: #e17055; margin: 0;"><strong>⚠️ Sin tarjeta asignada</strong></p>
-            <p style="color: #636e72; margin: 5px 0 0 0; font-size: 14px;">
-                Contacta al administrador para que te asigne una tarjeta RFID
-            </p>
-        </div>';
-}
-
-$contenido .= '
+        <div class="card-body">
+            <?php if ($tarjeta): ?>
+                <?php $estado_tarjeta = $tarjeta['activa'] ? '<i class="fas fa-circle text-success"></i> Activa' : '<i class="fas fa-circle text-danger"></i> Inactiva'; ?>
+                <div class="info-line">
+                    <p><strong><i class="fas fa-hashtag"></i> UID:</strong> <code><?php echo htmlspecialchars($tarjeta['uid']); ?></code></p>
+                    <p><strong><i class="fas fa-signal"></i> Estado:</strong> <?php echo $estado_tarjeta; ?></p>
+                    <p><strong><i class="fas fa-calendar-plus"></i> Registrada:</strong> <?php echo date('d/m/Y', strtotime($tarjeta['fecha_registro'])); ?></p>
+                </div>
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Tu tarjeta está configurada correctamente
+                </div>
+            <?php else: ?>
+                <div class="alert alert-warning">
+                    <p class="text-no-margin"><strong><i class="fas fa-exclamation-triangle"></i> Sin tarjeta asignada</strong></p>
+                    <p class="text-small-margin">
+                        Contacta al administrador para que te asigne una tarjeta RFID
+                    </p>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
 <!-- Navegación de pestañas -->
 <div class="nav-tabs">
-    <button class="nav-tab active" onclick="cambiarTab(event, \'tab-recientes\')">📊 Asistencias Recientes</button>
-    <button class="nav-tab" onclick="cambiarTab(event, \'tab-estadisticas\')">📈 Mis Estadísticas</button>
-    <button class="nav-tab" onclick="cambiarTab(event, \'tab-historial\')">📋 Ver Historial Completo</button>
+    <button class="nav-tab active" onclick="cambiarTab(event, 'tab-recientes')">
+        <i class="fas fa-chart-bar"></i> Asistencias Recientes
+    </button>
+    <button class="nav-tab" onclick="cambiarTab(event, 'tab-estadisticas')">
+        <i class="fas fa-chart-line"></i> Mis Estadísticas
+    </button>
+    <button class="nav-tab" onclick="cambiarTab(event, 'tab-historial')">
+        <i class="fas fa-history"></i> Ver Historial Completo
+    </button>
 </div>
 
 <!-- TAB: Asistencias Recientes -->
 <div id="tab-recientes" class="tab-content active">
-    <h3>📊 Mis Últimas Asistencias</h3>
-    
-    <table class="table">
-        <thead>
-            <tr>
-                <th>📅 Fecha</th>
-                <th>🕐 Hora Entrada</th>
-                <th>📋 Estado</th>
-                <th>📱 Dispositivo</th>
-                <th>📝 Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>';
-
-if (!empty($asistencias_recientes)) {
-    foreach ($asistencias_recientes as $asistencia) {
-        $estado_clase = '';
-        $estado_texto = '';
-        
-        switch ($asistencia['estado']) {
-            case 'puntual':
-                $estado_clase = 'success';
-                $estado_texto = '✅ Puntual';
-                break;
-            case 'tardanza':
-                $estado_clase = 'warning';
-                $estado_texto = '⚠️ Tardanza';
-                break;
-            case 'ausente':
-                $estado_clase = 'danger';
-                $estado_texto = '❌ Ausente';
-                break;
-        }
-        
-        $contenido .= '
-            <tr>
-                <td><strong>' . date('d/m/Y', strtotime($asistencia['fecha'])) . '</strong><br>
-                    <small style="color: #666;">' . date('l', strtotime($asistencia['fecha'])) . '</small></td>
-                <td>' . ($asistencia['hora_entrada'] ? '<strong>' . date('H:i', strtotime($asistencia['hora_entrada'])) . '</strong>' : '-') . '</td>
-                <td><span class="btn btn-' . $estado_clase . '">' . $estado_texto . '</span></td>
-                <td>' . htmlspecialchars($asistencia['dispositivo_nombre'] ?? 'No registrado') . '</td>
-                <td>' . htmlspecialchars($asistencia['observaciones'] ?? '') . '</td>
-            </tr>';
-    }
-} else {
-    $contenido .= '
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
-                    📋 No tienes registros de asistencia aún
-                </td>
-            </tr>';
-}
-
-$contenido .= '
-        </tbody>
-    </table>
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-chart-bar"></i> Mis Últimas Asistencias</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-calendar-day"></i> Fecha</th>
+                            <th><i class="fas fa-clock"></i> Hora Entrada</th>
+                            <th><i class="fas fa-info-circle"></i> Estado</th>
+                            <th><i class="fas fa-mobile-alt"></i> Dispositivo</th>
+                            <th><i class="fas fa-sticky-note"></i> Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($asistencias_recientes)): ?>
+                            <?php foreach ($asistencias_recientes as $asistencia): ?>
+                                <?php
+                                $estado_clase = '';
+                                $estado_texto = '';
+                                
+                                switch ($asistencia['estado']) {
+                                    case 'puntual':
+                                        $estado_clase = 'success';
+                                        $estado_texto = '<i class="fas fa-check-circle"></i> Puntual';
+                                        break;
+                                    case 'tardanza':
+                                        $estado_clase = 'warning';
+                                        $estado_texto = '<i class="fas fa-exclamation-triangle"></i> Tardanza';
+                                        break;
+                                    case 'ausente':
+                                        $estado_clase = 'danger';
+                                        $estado_texto = '<i class="fas fa-times-circle"></i> Ausente';
+                                        break;
+                                }
+                                ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo date('d/m/Y', strtotime($asistencia['fecha'])); ?></strong><br>
+                                        <small class="text-muted"><?php echo date('l', strtotime($asistencia['fecha'])); ?></small>
+                                    </td>
+                                    <td><?php echo ($asistencia['hora_entrada'] ? '<strong>' . date('H:i', strtotime($asistencia['hora_entrada'])) . '</strong>' : '-'); ?></td>
+                                    <td><span class="badge badge-<?php echo $estado_clase; ?>"><?php echo $estado_texto; ?></span></td>
+                                    <td><?php echo htmlspecialchars($asistencia['dispositivo_nombre'] ?? 'No registrado'); ?></td>
+                                    <td><?php echo htmlspecialchars($asistencia['observaciones'] ?? ''); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-clipboard-list fa-3x empty-state-icon"></i><br>
+                                    No tienes registros de asistencia aún
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- TAB: Estadísticas -->
 <div id="tab-estadisticas" class="tab-content">
-    <h3>📈 Mis Estadísticas del Mes</h3>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-        <!-- Gráfico de puntualidad -->
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h4 style="color: #2c3e50; margin-bottom: 15px;">🎯 Puntualidad</h4>
-            <div style="text-align: center;">';
-
-$total_asistencias = $stats['mes_actual']['total_asistencias'] ?? 0;
-$puntuales = $stats['mes_actual']['puntuales'] ?? 0;
-$porcentaje_puntualidad = $total_asistencias > 0 ? round(($puntuales / $total_asistencias) * 100, 1) : 0;
-
-$color_porcentaje = '';
-if ($porcentaje_puntualidad >= 95) $color_porcentaje = '#27ae60';
-elseif ($porcentaje_puntualidad >= 85) $color_porcentaje = '#f39c12';
-else $color_porcentaje = '#e74c3c';
-
-$contenido .= '
-                <div style="font-size: 48px; font-weight: bold; color: ' . $color_porcentaje . '; margin-bottom: 10px;">
-                    ' . $porcentaje_puntualidad . '%
-                </div>
-                <p style="color: #666; margin: 0;">de puntualidad este mes</p>
-                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; margin-top: 15px;">
-                    <small>✅ ' . $puntuales . ' puntuales de ' . $total_asistencias . ' asistencias</small>
-                </div>
-            </div>
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-chart-line"></i> Mis Estadísticas del Mes</h6>
         </div>
-        
-        <!-- Comparación con horario -->
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h4 style="color: #2c3e50; margin-bottom: 15px;">⏰ Horario vs Realidad</h4>
-            <div style="line-height: 2;">
-                <p><strong>🎯 Hora de entrada:</strong> 08:00</p>
-                <p><strong>📊 Mi promedio:</strong> ' . ($stats['promedio_llegada'] ?? '00:00') . '</p>';
+        <div class="card-body">
+            <div class="grid-3-cols">
+                <!-- Gráfico de puntualidad -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-target"></i> Puntualidad</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <?php
+                        $total_asistencias = $stats['mes_actual']['total_asistencias'] ?? 0;
+                        $puntuales = $stats['mes_actual']['puntuales'] ?? 0;
+                        $porcentaje_puntualidad = $total_asistencias > 0 ? round(($puntuales / $total_asistencias) * 100, 1) : 0;
 
-if (isset($stats['mes_actual']['primera_llegada'])) {
-    $contenido .= '<p><strong>🌅 Más temprano:</strong> ' . date('H:i', strtotime($stats['mes_actual']['primera_llegada'])) . '</p>';
-}
-
-if (isset($stats['mes_actual']['ultima_llegada'])) {
-    $contenido .= '<p><strong>🌙 Más tarde:</strong> ' . date('H:i', strtotime($stats['mes_actual']['ultima_llegada'])) . '</p>';
-}
-
-$contenido .= '
-            </div>
-        </div>
-        
-        <!-- Logros y racha -->
-        <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h4 style="color: #2c3e50; margin-bottom: 15px;">🏆 Logros</h4>
-            <div style="text-align: center;">';
-
-$racha = $stats['racha_puntual'] ?? 0;
-
-if ($racha >= 10) {
-    $contenido .= '
-                <div style="font-size: 48px; margin-bottom: 10px;">🔥</div>
-                <p style="font-weight: bold; color: #e74c3c;">¡Racha increíble!</p>';
-} elseif ($racha >= 5) {
-    $contenido .= '
-                <div style="font-size: 48px; margin-bottom: 10px;">⭐</div>
-                <p style="font-weight: bold; color: #f39c12;">¡Excelente racha!</p>';
-} elseif ($racha >= 3) {
-    $contenido .= '
-                <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
-                <p style="font-weight: bold; color: #27ae60;">¡Buena racha!</p>';
-} else {
-    $contenido .= '
-                <div style="font-size: 48px; margin-bottom: 10px;">🎯</div>
-                <p style="font-weight: bold; color: #3498db;">¡Sigue así!</p>';
-}
-
-$contenido .= '
-                <p style="color: #666; margin: 10px 0 0 0;">' . $racha . ' días puntuales consecutivos</p>
+                        $color_class = '';
+                        if ($porcentaje_puntualidad >= 95) $color_class = 'percentage-green';
+                        elseif ($porcentaje_puntualidad >= 85) $color_class = 'percentage-yellow';
+                        else $color_class = 'percentage-red';
+                        ?>
+                        <div class="percentage-display <?php echo $color_class; ?>">
+                            <?php echo $porcentaje_puntualidad; ?>%
+                        </div>
+                        <p class="text-muted">de puntualidad este mes</p>
+                        <div class="stats-summary">
+                            <small><i class="fas fa-check-circle text-success"></i> <?php echo $puntuales; ?> puntuales de <?php echo $total_asistencias; ?> asistencias</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Comparación con horario -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-clock"></i> Horario vs Realidad</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-line">
+                            <p><strong><i class="fas fa-target"></i> Hora de entrada:</strong> 08:00</p>
+                            <p><strong><i class="fas fa-chart-line"></i> Mi promedio:</strong> <?php echo ($stats['promedio_llegada'] ?? '00:00'); ?></p>
+                            <?php if (isset($stats['mes_actual']['primera_llegada'])): ?>
+                                <p><strong><i class="fas fa-sunrise"></i> Más temprano:</strong> <?php echo date('H:i', strtotime($stats['mes_actual']['primera_llegada'])); ?></p>
+                            <?php endif; ?>
+                            <?php if (isset($stats['mes_actual']['ultima_llegada'])): ?>
+                                <p><strong><i class="fas fa-sunset"></i> Más tarde:</strong> <?php echo date('H:i', strtotime($stats['mes_actual']['ultima_llegada'])); ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logros y racha -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-trophy"></i> Logros</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <?php
+                        $racha = $stats['racha_puntual'] ?? 0;
+                        
+                        if ($racha >= 10) {
+                            echo '<div class="status-icon"><i class="fas fa-fire text-danger"></i></div>';
+                            echo '<p class="text-danger font-weight-bold">¡Racha increíble!</p>';
+                        } elseif ($racha >= 5) {
+                            echo '<div class="status-icon"><i class="fas fa-star text-warning"></i></div>';
+                            echo '<p class="text-warning font-weight-bold">¡Excelente racha!</p>';
+                        } elseif ($racha >= 3) {
+                            echo '<div class="status-icon"><i class="fas fa-check-circle text-success"></i></div>';
+                            echo '<p class="text-success font-weight-bold">¡Buena racha!</p>';
+                        } else {
+                            echo '<div class="status-icon"><i class="fas fa-target text-primary"></i></div>';
+                            echo '<p class="text-primary font-weight-bold">¡Sigue así!</p>';
+                        }
+                        ?>
+                        <p class="text-muted"><?php echo $racha; ?> días puntuales consecutivos</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -251,15 +275,19 @@ $contenido .= '
 
 <!-- TAB: Ver Historial Completo -->
 <div id="tab-historial" class="tab-content">
-    <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 12px;">
-        <div style="font-size: 64px; margin-bottom: 20px;">📋</div>
-        <h3 style="color: #2c3e50; margin-bottom: 15px;">Historial Completo de Asistencias</h3>
-        <p style="color: #666; margin-bottom: 25px;">
-            Consulta tu historial completo con filtros por fecha y opciones de exportación
-        </p>
-        <button class="btn btn-primary" onclick="window.open(\'/empleado/historial\', \'_blank\')" style="font-size: 16px; padding: 12px 24px;">
-            📊 Ver Historial Completo
-        </button>
+    <div class="card">
+        <div class="card-body feature-center">
+            <div class="feature-icon-large">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <h3 class="feature-title">Historial Completo de Asistencias</h3>
+            <p class="feature-description">
+                Consulta tu historial completo con filtros por fecha y opciones de exportación
+            </p>
+            <button class="btn btn-primary btn-large" onclick="window.open('/empleado/historial', '_blank')">
+                <i class="fas fa-chart-bar"></i> Ver Historial Completo
+            </button>
+        </div>
     </div>
 </div>
 
@@ -270,23 +298,18 @@ setTimeout(function() {
 }, 300000); // 5 minutos
 
 // Mostrar notificación si aún no ha marcado asistencia hoy
-document.addEventListener("DOMContentLoaded", function() {';
-
-if (!$asistencia_hoy && date('H') >= 8) { // Si son las 8 AM o más y no ha marcado
-    $contenido .= '
+document.addEventListener("DOMContentLoaded", function() {
+    <?php if (!$asistencia_hoy && date('H') >= 8): // Si son las 8 AM o más y no ha marcado ?>
     setTimeout(function() {
-        if (confirm("⚠️ Recordatorio: Aún no has marcado asistencia hoy.\\n\\n¿Te gustaría ver información sobre cómo marcar asistencia?")) {
-            alert("📱 Para marcar asistencia:\\n\\n1. Busca el lector RFID en tu oficina\\n2. Acerca tu tarjeta al lector\\n3. Espera el pitido de confirmación\\n\\n¡Tu asistencia se registrará automáticamente!");
+        if (confirm("⚠️ Recordatorio: Aún no has marcado asistencia hoy.\n\n¿Te gustaría ver información sobre cómo marcar asistencia?")) {
+            mostrarAlerta("📱 Para marcar asistencia:\n\n1. Busca el lector RFID en tu oficina\n2. Acerca tu tarjeta al lector\n3. Espera el pitido de confirmación\n\n¡Tu asistencia se registrará automáticamente!", 'info');
         }
-    }, 3000);';
-}
-
-$contenido .= '
+    }, 3000);
+    <?php endif; ?>
 });
 </script>
-';
 
-$titulo = 'Mi Panel de Empleado';
-$seccion = 'Dashboard Personal';
-include_once __DIR__ . '/../layouts/main.php';
+<?php
+$contenido = ob_get_clean();
+include __DIR__ . '/../layouts/main.php';
 ?>

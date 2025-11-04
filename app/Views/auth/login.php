@@ -150,7 +150,7 @@
             <a href="/recuperar-password">¿Olvidaste tu contraseña?</a>
         </div>
         
-        <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; font-size: 12px;">
+        <div class="info-section">
             <strong>Usuarios de prueba:</strong><br>
             Admin: admin@empresa.com / admin123<br>
             RRHH: rrhh@empresa.com / rrhh123<br>

@@ -1,144 +1,197 @@
 <?php
-$contenido = '
+/**
+ * Dashboard de Recursos Humanos
+ * Sistema de Control de Asistencia
+ */
+
+$titulo = 'Panel de Recursos Humanos';
+$seccion = 'Dashboard RRHH';
+ob_start();
+?>
+
 <div class="stats-grid">
     <div class="stat-card success">
-        <div class="stat-number">' . ($stats['total_empleados'] ?? 0) . '</div>
-        <div class="stat-label">Total Empleados</div>
+        <div class="stat-number"><?php echo ($stats['total_empleados'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-users"></i> Total Empleados</div>
     </div>
     <div class="stat-card">
-        <div class="stat-number">' . ($stats['presentes_hoy'] ?? 0) . '</div>
-        <div class="stat-label">Presentes Hoy</div>
+        <div class="stat-number"><?php echo ($stats['presentes_hoy'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-user-check"></i> Presentes Hoy</div>
     </div>
     <div class="stat-card warning">
-        <div class="stat-number">' . ($stats['tardanzas_hoy'] ?? 0) . '</div>
-        <div class="stat-label">Tardanzas Hoy</div>
+        <div class="stat-number"><?php echo ($stats['tardanzas_hoy'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-clock"></i> Tardanzas Hoy</div>
     </div>
     <div class="stat-card danger">
-        <div class="stat-number">' . ($stats['ausentes_hoy'] ?? 0) . '</div>
-        <div class="stat-label">Ausentes Hoy</div>
+        <div class="stat-number"><?php echo ($stats['ausentes_hoy'] ?? 0); ?></div>
+        <div class="stat-label"><i class="fas fa-user-times"></i> Ausentes Hoy</div>
     </div>
 </div>
 
 <div class="nav-tabs">
-    <button class="nav-tab active" onclick="cambiarTab(event, \'tab-hoy\')">📅 Asistencias de Hoy</button>
-    <button class="nav-tab" onclick="cambiarTab(event, \'tab-reportes\')">📊 Reportes</button>
-    <button class="nav-tab" onclick="cambiarTab(event, \'tab-tardanzas\')">⚠️ Empleados con Tardanzas</button>
-    <button class="nav-tab" onclick="cambiarTab(event, \'tab-semanal\')">📈 Reporte Semanal</button>
+    <button class="nav-tab active" onclick="cambiarTab(event, 'tab-hoy')">
+        <i class="fas fa-calendar-day"></i> Asistencias de Hoy
+    </button>
+    <button class="nav-tab" onclick="cambiarTab(event, 'tab-reportes')">
+        <i class="fas fa-chart-bar"></i> Reportes
+    </button>
+    <button class="nav-tab" onclick="cambiarTab(event, 'tab-tardanzas')">
+        <i class="fas fa-exclamation-triangle"></i> Empleados con Tardanzas
+    </button>
+    <button class="nav-tab" onclick="cambiarTab(event, 'tab-semanal')">
+        <i class="fas fa-chart-line"></i> Reporte Semanal
+    </button>
 </div>
 
 <!-- TAB: Asistencias de Hoy -->
 <div id="tab-hoy" class="tab-content active">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3>📅 Asistencias de Hoy (' . date('d/m/Y') . ')</h3>
-        <div>
-            <button class="btn btn-success" onclick="location.reload()">🔄 Actualizar</button>
-            <button class="btn btn-primary" onclick="exportarAsistenciasHoy()">📥 Exportar</button>
+    <div class="card">
+        <div class="card-header flex-space-between">
+            <h6><i class="fas fa-calendar-day"></i> Asistencias de Hoy (<?php echo date('d/m/Y'); ?>)</h6>
+            <div>
+                <button class="btn btn-success btn-sm" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+                <button class="btn btn-primary btn-sm" onclick="exportarAsistenciasHoy()">
+                    <i class="fas fa-download"></i> Exportar
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table" id="tabla-asistencias-hoy">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Empleado</th>
+                            <th><i class="fas fa-clock"></i> Hora Entrada</th>
+                            <th><i class="fas fa-info-circle"></i> Estado</th>
+                            <th><i class="fas fa-mobile-alt"></i> Dispositivo</th>
+                            <th><i class="fas fa-sticky-note"></i> Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($asistencias_hoy)): ?>
+                            <?php foreach ($asistencias_hoy as $asistencia): ?>
+                                <?php
+                                $estado_clase = '';
+                                $estado_texto = $asistencia['estado'];
+                                
+                                switch ($asistencia['estado']) {
+                                    case 'puntual':
+                                        $estado_clase = 'success';
+                                        $estado_texto = '<i class="fas fa-check-circle"></i> Puntual';
+                                        break;
+                                    case 'tardanza':
+                                        $estado_clase = 'warning';
+                                        $estado_texto = '<i class="fas fa-exclamation-triangle"></i> Tardanza';
+                                        break;
+                                    case 'ausente':
+                                        $estado_clase = 'danger';
+                                        $estado_texto = '<i class="fas fa-times-circle"></i> Ausente';
+                                        break;
+                                }
+                                ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo htmlspecialchars($asistencia['usuario_nombre']); ?></strong><br>
+                                        <small class="text-muted"><?php echo htmlspecialchars($asistencia['usuario_email']); ?></small>
+                                    </td>
+                                    <td><?php echo ($asistencia['hora_entrada'] ? '<strong>' . date('H:i', strtotime($asistencia['hora_entrada'])) . '</strong>' : '-'); ?></td>
+                                    <td><span class="badge badge-<?php echo $estado_clase; ?>"><?php echo $estado_texto; ?></span></td>
+                                    <td><?php echo htmlspecialchars($asistencia['dispositivo_nombre'] ?? 'No registrado'); ?></td>
+                                    <td><?php echo htmlspecialchars($asistencia['observaciones'] ?? ''); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-clipboard-list fa-3x empty-state-icon"></i><br>
+                                    No hay registros de asistencia para hoy
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-    
-    <table class="table">
-        <thead>
-            <tr>
-                <th>👤 Empleado</th>
-                <th>🕐 Hora Entrada</th>
-                <th>📋 Estado</th>
-                <th>📱 Dispositivo</th>
-                <th>📝 Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>';
-
-if (!empty($asistencias_hoy)) {
-    foreach ($asistencias_hoy as $asistencia) {
-        $estado_clase = '';
-        $estado_texto = $asistencia['estado'];
-        
-        switch ($asistencia['estado']) {
-            case 'puntual':
-                $estado_clase = 'success';
-                $estado_texto = '✅ Puntual';
-                break;
-            case 'tardanza':
-                $estado_clase = 'warning';
-                $estado_texto = '⚠️ Tardanza';
-                break;
-            case 'ausente':
-                $estado_clase = 'danger';
-                $estado_texto = '❌ Ausente';
-                break;
-        }
-        
-        $contenido .= '
-            <tr>
-                <td>
-                    <strong>' . htmlspecialchars($asistencia['usuario_nombre']) . '</strong><br>
-                    <small style="color: #666;">' . htmlspecialchars($asistencia['usuario_email']) . '</small>
-                </td>
-                <td>' . ($asistencia['hora_entrada'] ? '<strong>' . date('H:i', strtotime($asistencia['hora_entrada'])) . '</strong>' : '-') . '</td>
-                <td><span class="btn btn-' . $estado_clase . '">' . $estado_texto . '</span></td>
-                <td>' . htmlspecialchars($asistencia['dispositivo_nombre'] ?? 'No registrado') . '</td>
-                <td>' . htmlspecialchars($asistencia['observaciones'] ?? '') . '</td>
-            </tr>';
-    }
-} else {
-    $contenido .= '
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
-                    📋 No hay registros de asistencia para hoy
-                </td>
-            </tr>';
-}
-
-$contenido .= '
-        </tbody>
-    </table>
 </div>
 
 <!-- TAB: Reportes -->
 <div id="tab-reportes" class="tab-content">
-    <h3>📊 Generar Reportes de Asistencia</h3>
-    
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <form id="form-reporte" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="fecha_inicio">📅 Fecha Inicio:</label>
-                <input type="date" id="fecha_inicio" name="fecha_inicio" value="' . date('Y-m-01') . '" required>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="fecha_fin">📅 Fecha Fin:</label>
-                <input type="date" id="fecha_fin" name="fecha_fin" value="' . date('Y-m-t') . '" required>
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-                <label for="formato">📄 Formato:</label>
-                <select id="formato" name="formato">
-                    <option value="html">📄 Ver en pantalla</option>
-                    <option value="csv">📊 Descargar CSV</option>
-                    <option value="json">🔗 JSON (API)</option>
-                </select>
-            </div>
-            <div>
-                <button type="submit" class="btn btn-primary">📈 Generar Reporte</button>
-            </div>
-        </form>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-            <h4>📈 Reportes Rápidos</h4>
-            <div style="margin-top: 15px;">
-                <button class="btn btn-primary" onclick="generarReporteRapido(\'hoy\')">📅 Asistencias Hoy</button><br>
-                <button class="btn btn-warning" onclick="generarReporteRapido(\'semana\')">📊 Esta Semana</button><br>
-                <button class="btn btn-success" onclick="generarReporteRapido(\'mes\')">📈 Este Mes</button><br>
-                <button class="btn btn-danger" onclick="generarReporteRapido(\'tardanzas\')">⚠️ Solo Tardanzas</button>
-            </div>
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-chart-bar"></i> Generar Reportes de Asistencia</h6>
         </div>
-        
-        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
-            <h4>📋 Estadísticas del Mes</h4>
-            <div style="margin-top: 15px;">
-                <p><strong>📊 Total Tardanzas:</strong> ' . ($stats['tardanzas_mes'] ?? 0) . '</p>
-                <p><strong>📈 Promedio Diario:</strong> ' . round(($stats['tardanzas_mes'] ?? 0) / date('j'), 1) . '</p>
-                <p><strong>📅 Días Transcurridos:</strong> ' . date('j') . ' de ' . date('t') . '</p>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <p class="card-info-header"><i class="fas fa-info-circle"></i> <strong>Generador de Reportes</strong></p>
+                <p class="card-info-description">
+                    Selecciona el rango de fechas y formato para generar reportes personalizados
+                </p>
+            </div>
+            
+            <form id="form-reporte" class="form-inline">
+                <div class="form-grid">
+                    <div class="form-group form-group-no-margin">
+                        <label for="fecha_inicio"><i class="fas fa-calendar-alt"></i> Fecha Inicio:</label>
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" value="<?php echo date('Y-m-01'); ?>" required>
+                    </div>
+                    <div class="form-group form-group-no-margin">
+                        <label for="fecha_fin"><i class="fas fa-calendar-alt"></i> Fecha Fin:</label>
+                        <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" value="<?php echo date('Y-m-t'); ?>" required>
+                    </div>
+                    <div class="form-group form-group-no-margin">
+                        <label for="formato"><i class="fas fa-file-alt"></i> Formato:</label>
+                        <select id="formato" name="formato" class="form-control">
+                            <option value="html"><i class="fas fa-eye"></i> Ver en pantalla</option>
+                            <option value="csv"><i class="fas fa-file-csv"></i> Descargar CSV</option>
+                            <option value="json"><i class="fas fa-code"></i> JSON (API)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-chart-line"></i> Generar Reporte
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="grid-3-cols">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-bolt"></i> Reportes Rápidos</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="flex-column">
+                            <button class="btn btn-primary btn-sm" onclick="generarReporteRapido('hoy')">
+                                <i class="fas fa-calendar-day"></i> Asistencias Hoy
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="generarReporteRapido('semana')">
+                                <i class="fas fa-calendar-week"></i> Esta Semana
+                            </button>
+                            <button class="btn btn-success btn-sm" onclick="generarReporteRapido('mes')">
+                                <i class="fas fa-calendar-alt"></i> Este Mes
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="generarReporteRapido('tardanzas')">
+                                <i class="fas fa-exclamation-triangle"></i> Solo Tardanzas
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-chart-pie"></i> Estadísticas del Mes</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-line">
+                            <p><strong><i class="fas fa-exclamation-triangle"></i> Total Tardanzas:</strong> <?php echo ($stats['tardanzas_mes'] ?? 0); ?></p>
+                            <p><strong><i class="fas fa-chart-line"></i> Promedio Diario:</strong> <?php echo round(($stats['tardanzas_mes'] ?? 0) / date('j'), 1); ?></p>
+                            <p><strong><i class="fas fa-calendar-check"></i> Días Transcurridos:</strong> <?php echo date('j'); ?> de <?php echo date('t'); ?></p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -146,106 +199,115 @@ $contenido .= '
 
 <!-- TAB: Empleados con Tardanzas -->
 <div id="tab-tardanzas" class="tab-content">
-    <h3>⚠️ Empleados con Más Tardanzas Este Mes</h3>
-    
-    <table class="table">
-        <thead>
-            <tr>
-                <th>👤 Empleado</th>
-                <th>📧 Email</th>
-                <th>⚠️ Total Tardanzas</th>
-                <th>🔍 Acciones</th>
-            </tr>
-        </thead>
-        <tbody>';
-
-if (!empty($empleados_tardanzas)) {
-    foreach ($empleados_tardanzas as $empleado) {
-        $contenido .= '
-            <tr>
-                <td><strong>' . htmlspecialchars($empleado['nombre']) . '</strong></td>
-                <td>' . htmlspecialchars($empleado['email']) . '</td>
-                <td>
-                    <span class="btn btn-warning">⚠️ ' . $empleado['total_tardanzas'] . '</span>
-                </td>
-                <td>
-                    <button class="btn btn-primary" onclick="verDetalleEmpleado(\'' . htmlspecialchars($empleado['email']) . '\')">
-                        👁️ Ver Detalle
-                    </button>
-                </td>
-            </tr>';
-    }
-} else {
-    $contenido .= '
-            <tr>
-                <td colspan="4" style="text-align: center; padding: 30px; color: #666;">
-                    ✅ ¡Excelente! No hay empleados con tardanzas este mes
-                </td>
-            </tr>';
-}
-
-$contenido .= '
-        </tbody>
-    </table>
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-exclamation-triangle"></i> Empleados con Más Tardanzas Este Mes</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table" id="tabla-tardanzas">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Empleado</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-exclamation-triangle"></i> Total Tardanzas</th>
+                            <th><i class="fas fa-tools"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($empleados_tardanzas)): ?>
+                            <?php foreach ($empleados_tardanzas as $empleado): ?>
+                                <tr>
+                                    <td><strong><?php echo htmlspecialchars($empleado['nombre']); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($empleado['email']); ?></td>
+                                    <td>
+                                        <span class="badge badge-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> <?php echo $empleado['total_tardanzas']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-primary btn-sm" onclick="verDetalleEmpleado('<?php echo htmlspecialchars($empleado['email']); ?>')">
+                                            <i class="fas fa-eye"></i> Ver Detalle
+                                        </button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fas fa-check-circle fa-3x empty-state-icon success"></i><br>
+                                    ¡Excelente! No hay empleados con tardanzas este mes
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- TAB: Reporte Semanal -->
 <div id="tab-semanal" class="tab-content">
-    <h3>📈 Reporte de los Últimos 7 Días</h3>
-    
-    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>📅 Fecha</th>
-                    <th>👥 Total Presentes</th>
-                    <th>✅ Puntuales</th>
-                    <th>⚠️ Tardanzas</th>
-                    <th>📊 % Puntualidad</th>
-                </tr>
-            </thead>
-            <tbody>';
-
-if (!empty($reporte_semanal)) {
-    foreach ($reporte_semanal as $dia) {
-        $total = $dia['total_presentes'];
-        $puntuales = $dia['puntuales'];
-        $tardanzas = $dia['tardanzas'];
-        $porcentaje = $total > 0 ? round(($puntuales / $total) * 100, 1) : 0;
-        
-        $porcentaje_clase = '';
-        if ($porcentaje >= 90) $porcentaje_clase = 'success';
-        elseif ($porcentaje >= 70) $porcentaje_clase = 'warning';
-        else $porcentaje_clase = 'danger';
-        
-        $contenido .= '
-            <tr>
-                <td><strong>' . date('d/m/Y (l)', strtotime($dia['dia'])) . '</strong></td>
-                <td>' . $total . '</td>
-                <td><span class="btn btn-success">' . $puntuales . '</span></td>
-                <td><span class="btn btn-warning">' . $tardanzas . '</span></td>
-                <td><span class="btn btn-' . $porcentaje_clase . '">' . $porcentaje . '%</span></td>
-            </tr>';
-    }
-} else {
-    $contenido .= '
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 30px; color: #666;">
-                    📊 No hay datos para mostrar
-                </td>
-            </tr>';
-}
-
-$contenido .= '
-            </tbody>
-        </table>
-    </div>
-    
-    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60;">
-        <h4 style="color: #27ae60; margin-bottom: 10px;">📈 Resumen Semanal</h4>
-        <p><strong>📊 Promedio de Asistencia:</strong> ' . round(array_sum(array_column($reporte_semanal, 'total_presentes')) / max(1, count($reporte_semanal)), 1) . ' empleados/día</p>
-        <p><strong>⚠️ Total Tardanzas:</strong> ' . array_sum(array_column($reporte_semanal, 'tardanzas')) . '</p>
-        <p><strong>✅ Total Puntuales:</strong> ' . array_sum(array_column($reporte_semanal, 'puntuales')) . '</p>
+    <div class="card">
+        <div class="card-header">
+            <h6><i class="fas fa-chart-line"></i> Reporte de los Últimos 7 Días</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table" id="tabla-semanal">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-calendar-day"></i> Fecha</th>
+                            <th><i class="fas fa-users"></i> Total Presentes</th>
+                            <th><i class="fas fa-check-circle"></i> Puntuales</th>
+                            <th><i class="fas fa-exclamation-triangle"></i> Tardanzas</th>
+                            <th><i class="fas fa-percentage"></i> % Puntualidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($reporte_semanal)): ?>
+                            <?php foreach ($reporte_semanal as $dia): ?>
+                                <?php
+                                $total = $dia['total_presentes'];
+                                $puntuales = $dia['puntuales'];
+                                $tardanzas = $dia['tardanzas'];
+                                $porcentaje = $total > 0 ? round(($puntuales / $total) * 100, 1) : 0;
+                                
+                                $porcentaje_clase = '';
+                                if ($porcentaje >= 90) $porcentaje_clase = 'success';
+                                elseif ($porcentaje >= 70) $porcentaje_clase = 'warning';
+                                else $porcentaje_clase = 'danger';
+                                ?>
+                                <tr>
+                                    <td><strong><?php echo date('d/m/Y (l)', strtotime($dia['dia'])); ?></strong></td>
+                                    <td><?php echo $total; ?></td>
+                                    <td><span class="badge badge-success"><?php echo $puntuales; ?></span></td>
+                                    <td><span class="badge badge-warning"><?php echo $tardanzas; ?></span></td>
+                                    <td><span class="badge badge-<?php echo $porcentaje_clase; ?>"><?php echo $porcentaje; ?>%</span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-chart-line fa-3x empty-state-icon"></i><br>
+                                    No hay datos para mostrar
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <?php if (!empty($reporte_semanal)): ?>
+                <div class="summary-card">
+                    <h6 class="summary-title"><i class="fas fa-chart-line"></i> Resumen Semanal</h6>
+                    <p><strong><i class="fas fa-chart-bar"></i> Promedio de Asistencia:</strong> <?php echo round(array_sum(array_column($reporte_semanal, 'total_presentes')) / max(1, count($reporte_semanal)), 1); ?> empleados/día</p>
+                    <p><strong><i class="fas fa-exclamation-triangle"></i> Total Tardanzas:</strong> <?php echo array_sum(array_column($reporte_semanal, 'tardanzas')); ?></p>
+                    <p><strong><i class="fas fa-check-circle"></i> Total Puntuales:</strong> <?php echo array_sum(array_column($reporte_semanal, 'puntuales')); ?></p>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 
@@ -305,13 +367,58 @@ function exportarAsistenciasHoy() {
 
 // Ver detalle de empleado
 function verDetalleEmpleado(email) {
-    // Buscar ID del empleado por email (esto normalmente vendría del backend)
-    alert("Ver detalle del empleado: " + email + "\\n\\nEsta función abrirá el perfil completo del empleado con su historial de asistencias.");
+    mostrarAlerta("Ver detalle del empleado: " + email + "\n\nEsta función abrirá el perfil completo del empleado con su historial de asistencias.", 'info');
 }
-</script>
-';
 
-$titulo = 'Panel de Recursos Humanos';
-$seccion = 'Dashboard RRHH';
-include_once __DIR__ . '/../layouts/main.php';
+// Inicializar DataTables cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        // Tabla de asistencias de hoy
+        $('#tabla-asistencias-hoy').DataTable({
+            "pageLength": 10,
+            "lengthChange": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+            }
+        });
+        
+        // Tabla de empleados con tardanzas
+        $('#tabla-tardanzas').DataTable({
+            "pageLength": 10,
+            "lengthChange": false,
+            "searching": true,
+            "ordering": true,
+            "info": false,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+            }
+        });
+        
+        // Tabla de reporte semanal
+        $('#tabla-semanal').DataTable({
+            "pageLength": 10,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": false,
+            "info": false,
+            "autoWidth": false,
+            "responsive": true,
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+            }
+        });
+    }
+});
+</script>
+
+<?php
+$contenido = ob_get_clean();
+include __DIR__ . '/../layouts/main.php';
 ?>
