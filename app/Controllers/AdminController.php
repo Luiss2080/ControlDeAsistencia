@@ -29,7 +29,7 @@ class AdminController {
      */
     public function dashboard() {
         // Obtener estadísticas del sistema
-        $estadisticas = $this->obtenerEstadisticas();
+        $stats = $this->obtenerEstadisticas();
         
         // Obtener actividad reciente
         $actividad_reciente = $this->obtenerActividadReciente();
@@ -271,16 +271,16 @@ class AdminController {
         $stats = [];
         
         // Usuarios activos
-        $stats['usuarios_total'] = $this->db->fetch("SELECT COUNT(*) as total FROM usuarios WHERE activo = 1")['total'];
+        $stats['total_usuarios'] = $this->db->fetch("SELECT COUNT(*) as total FROM usuarios WHERE activo = 1")['total'];
         
         // Dispositivos activos
-        $stats['dispositivos_total'] = $this->db->fetch("SELECT COUNT(*) as total FROM dispositivos WHERE estado = 'activo'")['total'];
+        $stats['dispositivos_activos'] = $this->db->fetch("SELECT COUNT(*) as total FROM dispositivos WHERE estado = 'activo'")['total'];
         
         // Tarjetas asignadas
-        $stats['tarjetas_asignadas'] = $this->db->fetch("SELECT COUNT(*) as total FROM tarjetas_rfid WHERE estado = 'activa' AND usuario_id IS NOT NULL")['total'];
+        $stats['tarjetas_activas'] = $this->db->fetch("SELECT COUNT(*) as total FROM tarjetas_rfid WHERE estado = 'activa' AND usuario_id IS NOT NULL")['total'];
         
         // Registros de hoy
-        $stats['registros_hoy'] = $this->db->fetch("SELECT COUNT(*) as total FROM asistencias WHERE DATE(fecha_hora) = CURDATE()")['total'];
+        $stats['marcaciones_hoy'] = $this->db->fetch("SELECT COUNT(*) as total FROM asistencias WHERE DATE(fecha_hora) = CURDATE()")['total'];
         
         return $stats;
     }

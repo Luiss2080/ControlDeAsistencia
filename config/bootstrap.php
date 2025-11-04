@@ -5,21 +5,23 @@
  */
 
 // Cargar variables de entorno
-if (file_exists(__DIR__ . '/.env')) {
-    $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+if (file_exists(__DIR__ . '/../.env')) {
+    $lines = file(__DIR__ . '/../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lines as $line) {
         if (strpos($line, '#') === 0) continue;
         if (strpos($line, '=') !== false) {
             list($key, $value) = explode('=', $line, 2);
-            $_ENV[trim($key)] = trim($value);
+            $_ENV[trim($key)] = trim($value, '"\'');
         }
     }
 }
 
 // Configuración de errores
-if ($_ENV['APP_DEBUG'] ?? false) {
+$debug = ($_ENV['APP_DEBUG'] ?? 'false');
+if ($debug === 'true' || $debug === true) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
+    ini_set('log_errors', 1);
 } else {
     error_reporting(0);
     ini_set('display_errors', 0);
@@ -36,7 +38,7 @@ ini_set('session.cookie_secure', isset($_SERVER['HTTPS']));
 // Autoloader simple
 spl_autoload_register(function ($class) {
     $class = str_replace('\\', DIRECTORY_SEPARATOR, $class);
-    // Buscar las clases a partir de la raíz del proyecto (config/..)
+    // Buscar las clases a partir de la raíz del proyecto
     $projectRoot = dirname(__DIR__);
     $file = $projectRoot . DIRECTORY_SEPARATOR . str_replace('App' . DIRECTORY_SEPARATOR, 'app' . DIRECTORY_SEPARATOR, $class) . '.php';
     
@@ -81,7 +83,7 @@ function auth() {
 
 // Función helper para verificar permisos
 function can($permission) {
-    return \App\Utils\Auth::tienePermiso($permission);
+    return \App\Utils\Auth::tieneRol($permission);
 }
 
 // Headers de seguridad

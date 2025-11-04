@@ -1,13 +1,12 @@
 <?php
 /**
- * Controlador de Autenticación
+ * Controlador de Autenticación Simplificado
  * Sistema de Control de Asistencia
  */
 
 namespace App\Controllers;
 
 use App\Models\Database;
-use App\Utils\Auth;
 
 class AuthController {
     private $db;
@@ -50,7 +49,7 @@ class AuthController {
             exit;
         }
 
-        // Buscar usuario en la base de datos
+        // Buscar usuario en la base de datos usando solo el rol simple
         $sql = "SELECT * FROM usuarios WHERE email = ? AND activo = 1";
         $usuario = $this->db->fetch($sql, [$email]);
 
@@ -65,7 +64,7 @@ class AuthController {
             exit;
         }
 
-        // Establecer sesión
+        // Establecer sesión simple
         $_SESSION['usuario_id'] = $usuario['id'];
         $_SESSION['usuario_email'] = $usuario['email'];
         $_SESSION['usuario_rol'] = $usuario['rol'];
@@ -89,7 +88,7 @@ class AuthController {
      */
     public function logout() {
         session_destroy();
-        header('Location: /ControlDeAsistencia/public/?mensaje=' . urlencode('Sesión cerrada correctamente'));
+        header('Location: /ControlDeAsistencia/?mensaje=' . urlencode('Sesión cerrada correctamente'));
         exit;
     }
 
@@ -127,7 +126,7 @@ class AuthController {
      */
     public static function requerir() {
         if (!self::estaAutenticado()) {
-            header('Location: /ControlDeAsistencia/public/');
+            header('Location: /ControlDeAsistencia/');
             exit;
         }
     }
@@ -139,7 +138,7 @@ class AuthController {
         self::requerir();
         
         if ($_SESSION['usuario_rol'] !== $rol) {
-            header('Location: /ControlDeAsistencia/public/?error=' . urlencode('Acceso denegado'));
+            header('Location: /ControlDeAsistencia/?error=' . urlencode('Acceso denegado'));
             exit;
         }
     }
