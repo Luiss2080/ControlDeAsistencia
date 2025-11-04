@@ -46,7 +46,7 @@ class AuthController {
         $password = $_POST['password'] ?? '';
 
         if (empty($email) || empty($password)) {
-            header('Location: /login?error=Email y contraseña son requeridos');
+            header('Location: /ControlDeAsistencia/?error=' . urlencode('Email y contraseña son requeridos'));
             exit;
         }
 
@@ -55,13 +55,13 @@ class AuthController {
         $usuario = $this->db->fetch($sql, [$email]);
 
         if (!$usuario) {
-            header('Location: /login?error=Usuario no encontrado');
+            header('Location: /ControlDeAsistencia/?error=' . urlencode('Usuario no encontrado'));
             exit;
         }
 
         // Verificar contraseña
         if (!password_verify($password, $usuario['password_hash'])) {
-            header('Location: /login?error=Contraseña incorrecta');
+            header('Location: /ControlDeAsistencia/?error=' . urlencode('Contraseña incorrecta'));
             exit;
         }
 
@@ -89,7 +89,7 @@ class AuthController {
      */
     public function logout() {
         session_destroy();
-        header('Location: /login?mensaje=Sesión cerrada correctamente');
+        header('Location: /ControlDeAsistencia/public/?mensaje=' . urlencode('Sesión cerrada correctamente'));
         exit;
     }
 
@@ -101,16 +101,16 @@ class AuthController {
         
         switch ($rol) {
             case 'admin':
-                header('Location: /admin/dashboard');
+                header('Location: /ControlDeAsistencia/admin');
                 break;
             case 'rrhh':
-                header('Location: /rrhh/dashboard');
+                header('Location: /ControlDeAsistencia/rrhh');
                 break;
             case 'empleado':
-                header('Location: /empleado/dashboard');
+                header('Location: /ControlDeAsistencia/empleado');
                 break;
             default:
-                header('Location: /login?error=Rol no válido');
+                header('Location: /ControlDeAsistencia/?error=' . urlencode('Rol no válido'));
         }
         exit;
     }
@@ -127,7 +127,7 @@ class AuthController {
      */
     public static function requerir() {
         if (!self::estaAutenticado()) {
-            header('Location: /login');
+            header('Location: /ControlDeAsistencia/public/');
             exit;
         }
     }
@@ -139,7 +139,7 @@ class AuthController {
         self::requerir();
         
         if ($_SESSION['usuario_rol'] !== $rol) {
-            header('Location: /login?error=Acceso denegado');
+            header('Location: /ControlDeAsistencia/public/?error=' . urlencode('Acceso denegado'));
             exit;
         }
     }

@@ -111,6 +111,47 @@ class Dispositivo {
     }
 
     /**
+     * Actualizar última conexión
+     */
+    public function actualizarUltimaConexion($id, $ipAddress = null) {
+        $datos = ['ultima_conexion' => date('Y-m-d H:i:s')];
+        
+        if ($ipAddress) {
+            $datos['ip_address'] = $ipAddress;
+        }
+        
+        return $this->db->update('dispositivos', $datos, 'id = ?', [$id]);
+    }
+
+    /**
+     * Actualizar estado completo del dispositivo
+     */
+    public function actualizarEstado($id, $estadoData) {
+        $datosPermitidos = [
+            'estado',
+            'version_firmware',
+            'memoria_libre',
+            'señal_wifi',
+            'temperatura',
+            'uptime',
+            'ultima_conexion',
+            'ip_address'
+        ];
+        
+        $datos = [];
+        foreach ($estadoData as $campo => $valor) {
+            if (in_array($campo, $datosPermitidos)) {
+                $datos[$campo] = $valor;
+            }
+        }
+        
+        // Siempre actualizar la última conexión
+        $datos['ultima_conexion'] = date('Y-m-d H:i:s');
+        
+        return $this->db->update('dispositivos', $datos, 'id = ?', [$id]);
+    }
+
+    /**
      * Cambiar estado del dispositivo
      */
     public function cambiarEstado($id, $estado) {

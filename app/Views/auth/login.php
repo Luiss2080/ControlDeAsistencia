@@ -124,7 +124,7 @@
             </div>
         <?php endif; ?>
         
-        <form method="POST" action="/login">
+        <form method="POST" action="/ControlDeAsistencia/">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token ?? ''; ?>">
             
             <div class="form-group">

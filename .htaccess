@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# Redireccionar a public si no es un archivo existente
+RewriteCond %{REQUEST_URI} !^/ControlDeAsistencia/public
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Redireccionar al index.php en public
+RewriteCond %{REQUEST_URI} ^/ControlDeAsistencia/public
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.php [L]

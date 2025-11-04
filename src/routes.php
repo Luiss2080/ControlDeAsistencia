@@ -65,7 +65,8 @@ class Router {
         $metodo = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         
-        // Normalizar la URI
+        // Normalizar la URI removiendo el path base de XAMPP
+        $uri = str_replace('/ControlDeAsistencia/public', '', $uri);
         $uri = rtrim($uri, '/');
         if (empty($uri)) $uri = '/';
         
