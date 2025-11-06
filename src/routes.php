@@ -38,6 +38,17 @@ class Router {
         $this->routes['POST']['/admin/crear-usuario'] = [AdminController::class, 'crearUsuario'];
         $this->routes['POST']['/admin/crear-dispositivo'] = [AdminController::class, 'crearDispositivo'];
         $this->routes['POST']['/admin/crear-tarjeta'] = [AdminController::class, 'crearTarjeta'];
+        $this->routes['POST']['/admin/tarjetas/crear'] = [AdminController::class, 'crearTarjeta'];
+        $this->routes['POST']['/admin/tarjetas/asignar'] = [AdminController::class, 'asignarTarjeta'];
+        $this->routes['GET']['/admin/tarjetas/desasignar/{uid}'] = [AdminController::class, 'desasignarTarjeta'];
+        $this->routes['GET']['/admin/tarjetas/bloquear/{uid}'] = [AdminController::class, 'bloquearTarjeta'];
+        $this->routes['GET']['/admin/tarjetas/activar/{uid}'] = [AdminController::class, 'activarTarjeta'];
+        $this->routes['GET']['/admin/tarjetas/eliminar/{uid}'] = [AdminController::class, 'eliminarTarjeta'];
+        $this->routes['GET']['/admin/dispositivos/detalles/{id}'] = [AdminController::class, 'detallesDispositivo'];
+        $this->routes['POST']['/admin/dispositivos/ping/{id}'] = [AdminController::class, 'pingDispositivo'];
+        $this->routes['GET']['/admin/dispositivos/desactivar/{id}'] = [AdminController::class, 'desactivarDispositivo'];
+        $this->routes['GET']['/admin/dispositivos/activar/{id}'] = [AdminController::class, 'activarDispositivo'];
+        $this->routes['GET']['/admin/dispositivos/eliminar/{id}'] = [AdminController::class, 'eliminarDispositivo'];
         $this->routes['GET']['/admin/eliminar-usuario/{id}'] = [AdminController::class, 'eliminarUsuario'];
         $this->routes['GET']['/admin/eliminar-dispositivo/{token}'] = [AdminController::class, 'eliminarDispositivo'];
         $this->routes['GET']['/admin/eliminar-tarjeta/{uid}'] = [AdminController::class, 'eliminarTarjeta'];
@@ -45,8 +56,11 @@ class Router {
         // Rutas del panel de RRHH
         $this->routes['GET']['/rrhh'] = [RRHHController::class, 'dashboard'];
         $this->routes['GET']['/rrhh/dashboard'] = [RRHHController::class, 'dashboard'];
-        $this->routes['GET']['/rrhh/reporte'] = [RRHHController::class, 'generarReporte'];
+        $this->routes['GET']['/rrhh/reportes'] = [RRHHController::class, 'reporte'];
+        $this->routes['GET']['/rrhh/reporte'] = [RRHHController::class, 'reporte'];
+        $this->routes['POST']['/rrhh/exportar-reporte'] = [RRHHController::class, 'exportarReporte'];
         $this->routes['GET']['/rrhh/empleado/{id}'] = [RRHHController::class, 'verEmpleado'];
+        $this->routes['GET']['/rrhh/estadisticas-tiempo-real'] = [RRHHController::class, 'estadisticasTiempoReal'];
         
         // Rutas del panel de empleados
         $this->routes['GET']['/empleado'] = [EmpleadoController::class, 'dashboard'];

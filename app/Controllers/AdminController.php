@@ -241,16 +241,51 @@ class AdminController
     public function tarjetas()
     {
         try {
-            $tarjetas = $this->db->fetchAll("
+            // Obtener filtros
+            $filtros = [
+                'estado' => $_GET['estado'] ?? '',
+                'asignacion' => $_GET['asignacion'] ?? '',
+                'buscar' => $_GET['buscar'] ?? ''
+            ];
+
+            // Base de la consulta
+            $sql = "
                 SELECT t.*, 
-                       CONCAT(u.nombres, ' ', u.apellidos) as usuario_nombre,
-                       u.numero_empleado
+                       u.nombres, u.apellidos, u.numero_empleado,
+                       (SELECT MAX(fecha_hora) FROM asistencias a WHERE a.tarjeta_uid = t.uid_tarjeta) as ultimo_uso
                 FROM tarjetas_rfid t
                 LEFT JOIN usuarios u ON t.usuario_id = u.id
-                ORDER BY t.fecha_asignacion DESC
-            ");
+                WHERE 1=1
+            ";
 
-            $usuarios_sin_tarjeta = $this->db->fetchAll("
+            $params = [];
+
+            // Aplicar filtros
+            if (!empty($filtros['estado'])) {
+                $sql .= " AND t.estado = ?";
+                $params[] = $filtros['estado'];
+            }
+
+            if (!empty($filtros['asignacion'])) {
+                if ($filtros['asignacion'] === 'asignadas') {
+                    $sql .= " AND t.usuario_id IS NOT NULL";
+                } elseif ($filtros['asignacion'] === 'sin_asignar') {
+                    $sql .= " AND t.usuario_id IS NULL";
+                }
+            }
+
+            if (!empty($filtros['buscar'])) {
+                $sql .= " AND (t.uid_tarjeta LIKE ? OR u.nombres LIKE ? OR u.apellidos LIKE ? OR u.numero_empleado LIKE ?)";
+                $busqueda = '%' . $filtros['buscar'] . '%';
+                $params = array_merge($params, [$busqueda, $busqueda, $busqueda, $busqueda]);
+            }
+
+            $sql .= " ORDER BY t.fecha_asignacion DESC";
+
+            $tarjetas = $this->db->fetchAll($sql, $params);
+
+            // Obtener usuarios disponibles para asignar
+            $usuarios_disponibles = $this->db->fetchAll("
                 SELECT u.id, u.nombres, u.apellidos, u.numero_empleado
                 FROM usuarios u
                 LEFT JOIN tarjetas_rfid t ON u.id = t.usuario_id AND t.estado = 'activa'
@@ -258,7 +293,18 @@ class AdminController
                 ORDER BY u.apellidos, u.nombres
             ");
 
-            include __DIR__ . '/../Views/admin/tarjetas.php';
+            // Obtener usuario logueado
+            $usuario = $this->obtenerUsuarioLogueado();
+
+            $this->renderViewWithLayout('admin/tarjetas', [
+                'usuario' => $usuario,
+                'titulo' => 'Gestión de Tarjetas RFID',
+                'seccion' => 'Tarjetas',
+                'tarjetas' => $tarjetas,
+                'usuarios_disponibles' => $usuarios_disponibles,
+                'filtros' => $filtros
+            ]);
+
         } catch (Exception $e) {
             error_log("Error en tarjetas admin: " . $e->getMessage());
             $_SESSION['error'] = 'Error al cargar tarjetas';
@@ -595,5 +641,356 @@ class AdminController
 
         // Incluir el layout principal
         include __DIR__ . '/../Views/layouts/main.php';
+    }
+
+    /**
+     * Crear nueva tarjeta RFID
+     */
+    public function crearTarjeta()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $uid = strtoupper(trim($_POST['uid_tarjeta']));
+                $usuario_id = !empty($_POST['usuario_id']) ? (int)$_POST['usuario_id'] : null;
+                $descripcion = trim($_POST['descripcion'] ?? '');
+
+                // Verificar que no existe la tarjeta
+                $existe = $this->db->fetch("SELECT id FROM tarjetas_rfid WHERE uid_tarjeta = ?", [$uid]);
+                if ($existe) {
+                    $_SESSION['error'] = 'La tarjeta ya está registrada';
+                    header('Location: /ControlDeAsistencia/admin/tarjetas');
+                    exit;
+                }
+
+                // Insertar tarjeta
+                $resultado = $this->db->insert('tarjetas_rfid', [
+                    'uid_tarjeta' => $uid,
+                    'usuario_id' => $usuario_id,
+                    'estado' => 'activa',
+                    'descripcion' => $descripcion,
+                    'fecha_asignacion' => $usuario_id ? date('Y-m-d H:i:s') : null
+                ]);
+
+                if ($resultado) {
+                    $_SESSION['success'] = 'Tarjeta registrada exitosamente';
+                } else {
+                    $_SESSION['error'] = 'Error al registrar la tarjeta';
+                }
+
+            } catch (Exception $e) {
+                error_log("Error creando tarjeta: " . $e->getMessage());
+                $_SESSION['error'] = 'Error interno al crear la tarjeta';
+            }
+        }
+
+        header('Location: /ControlDeAsistencia/admin/tarjetas');
+        exit;
+    }
+
+    /**
+     * Desasignar tarjeta
+     */
+    public function desasignarTarjeta($uid)
+    {
+        try {
+            $resultado = $this->db->update('tarjetas_rfid', 
+                ['usuario_id' => null, 'fecha_asignacion' => null], 
+                ['uid_tarjeta' => $uid]
+            );
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Tarjeta desasignada exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al desasignar la tarjeta';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error desasignando tarjeta: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al desasignar la tarjeta';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/tarjetas');
+        exit;
+    }
+
+    /**
+     * Bloquear tarjeta
+     */
+    public function bloquearTarjeta($uid)
+    {
+        try {
+            $resultado = $this->db->update('tarjetas_rfid', 
+                ['estado' => 'bloqueada'], 
+                ['uid_tarjeta' => $uid]
+            );
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Tarjeta bloqueada exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al bloquear la tarjeta';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error bloqueando tarjeta: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al bloquear la tarjeta';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/tarjetas');
+        exit;
+    }
+
+    /**
+     * Activar tarjeta
+     */
+    public function activarTarjeta($uid)
+    {
+        try {
+            $resultado = $this->db->update('tarjetas_rfid', 
+                ['estado' => 'activa'], 
+                ['uid_tarjeta' => $uid]
+            );
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Tarjeta activada exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al activar la tarjeta';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error activando tarjeta: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al activar la tarjeta';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/tarjetas');
+        exit;
+    }
+
+    /**
+     * Eliminar tarjeta
+     */
+    public function eliminarTarjeta($uid)
+    {
+        try {
+            // Verificar si la tarjeta tiene registros de asistencia
+            $tiene_registros = $this->db->fetch(
+                "SELECT COUNT(*) as total FROM asistencias WHERE tarjeta_uid = ?", 
+                [$uid]
+            );
+
+            if ($tiene_registros['total'] > 0) {
+                $_SESSION['error'] = 'No se puede eliminar la tarjeta porque tiene registros de asistencia';
+                header('Location: /ControlDeAsistencia/admin/tarjetas');
+                exit;
+            }
+
+            $resultado = $this->db->delete('tarjetas_rfid', ['uid_tarjeta' => $uid]);
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Tarjeta eliminada exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al eliminar la tarjeta';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error eliminando tarjeta: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al eliminar la tarjeta';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/tarjetas');
+        exit;
+    }
+
+    /**
+     * Desactivar dispositivo
+     */
+    public function desactivarDispositivo($id)
+    {
+        try {
+            $resultado = $this->db->update('dispositivos', 
+                ['estado' => 'inactivo'], 
+                ['id' => $id]
+            );
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Dispositivo desactivado exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al desactivar el dispositivo';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error desactivando dispositivo: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al desactivar el dispositivo';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/dispositivos');
+        exit;
+    }
+
+    /**
+     * Activar dispositivo
+     */
+    public function activarDispositivo($id)
+    {
+        try {
+            $resultado = $this->db->update('dispositivos', 
+                ['estado' => 'activo'], 
+                ['id' => $id]
+            );
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Dispositivo activado exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al activar el dispositivo';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error activando dispositivo: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al activar el dispositivo';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/dispositivos');
+        exit;
+    }
+
+    /**
+     * Eliminar dispositivo
+     */
+    public function eliminarDispositivo($id)
+    {
+        try {
+            // Verificar si el dispositivo tiene registros de asistencia
+            $tiene_registros = $this->db->fetch(
+                "SELECT COUNT(*) as total FROM asistencias WHERE dispositivo_id = ?", 
+                [$id]
+            );
+
+            if ($tiene_registros['total'] > 0) {
+                $_SESSION['error'] = 'No se puede eliminar el dispositivo porque tiene registros de asistencia';
+                header('Location: /ControlDeAsistencia/admin/dispositivos');
+                exit;
+            }
+
+            $resultado = $this->db->delete('dispositivos', ['id' => $id]);
+
+            if ($resultado) {
+                $_SESSION['success'] = 'Dispositivo eliminado exitosamente';
+            } else {
+                $_SESSION['error'] = 'Error al eliminar el dispositivo';
+            }
+
+        } catch (Exception $e) {
+            error_log("Error eliminando dispositivo: " . $e->getMessage());
+            $_SESSION['error'] = 'Error interno al eliminar el dispositivo';
+        }
+
+        header('Location: /ControlDeAsistencia/admin/dispositivos');
+        exit;
+    }
+
+    /**
+     * Obtener detalles de un dispositivo
+     */
+    public function detallesDispositivo($id)
+    {
+        try {
+            $dispositivo = $this->db->fetch("
+                SELECT d.*, 
+                       COUNT(a.id) as total_registros,
+                       MAX(a.fecha_hora) as ultimo_registro,
+                       MIN(a.fecha_hora) as primer_registro
+                FROM dispositivos d
+                LEFT JOIN asistencias a ON d.id = a.dispositivo_id
+                WHERE d.id = ?
+                GROUP BY d.id
+            ", [$id]);
+
+            if (!$dispositivo) {
+                return $this->respuestaJSON(['error' => 'Dispositivo no encontrado'], 404);
+            }
+
+            // Generar HTML para mostrar en el modal
+            $html = "
+                <div class='row'>
+                    <div class='col-md-6'>
+                        <h6>Información General</h6>
+                        <table class='table table-sm'>
+                            <tr><td><strong>ID:</strong></td><td>{$dispositivo['id']}</td></tr>
+                            <tr><td><strong>Nombre:</strong></td><td>{$dispositivo['nombre']}</td></tr>
+                            <tr><td><strong>Ubicación:</strong></td><td>{$dispositivo['ubicacion']}</td></tr>
+                            <tr><td><strong>Estado:</strong></td><td>{$dispositivo['estado']}</td></tr>
+                            <tr><td><strong>IP:</strong></td><td>{$dispositivo['ip_address']}</td></tr>
+                        </table>
+                    </div>
+                    <div class='col-md-6'>
+                        <h6>Estadísticas</h6>
+                        <table class='table table-sm'>
+                            <tr><td><strong>Total Registros:</strong></td><td>{$dispositivo['total_registros']}</td></tr>
+                            <tr><td><strong>Último Ping:</strong></td><td>{$dispositivo['ultimo_ping']}</td></tr>
+                            <tr><td><strong>Último Registro:</strong></td><td>{$dispositivo['ultimo_registro']}</td></tr>
+                            <tr><td><strong>Primer Registro:</strong></td><td>{$dispositivo['primer_registro']}</td></tr>
+                        </table>
+                    </div>
+                </div>
+                <div class='mt-3'>
+                    <h6>Token de Autenticación</h6>
+                    <div class='alert alert-warning'>
+                        <code>{$dispositivo['token_dispositivo']}</code>
+                        <button class='btn btn-sm btn-outline-primary float-end' onclick='copiarToken()'>
+                            <i class='fas fa-copy'></i> Copiar
+                        </button>
+                    </div>
+                </div>
+            ";
+
+            return $this->respuestaJSON(['html' => $html]);
+
+        } catch (Exception $e) {
+            error_log("Error obteniendo detalles dispositivo: " . $e->getMessage());
+            return $this->respuestaJSON(['error' => 'Error interno'], 500);
+        }
+    }
+
+    /**
+     * Ping a dispositivo específico
+     */
+    public function pingDispositivo($id)
+    {
+        try {
+            $dispositivo = $this->db->fetch("SELECT * FROM dispositivos WHERE id = ?", [$id]);
+            
+            if (!$dispositivo) {
+                return $this->respuestaJSON(['error' => 'Dispositivo no encontrado'], 404);
+            }
+
+            // Simular ping (en un caso real, aquí se haría un request HTTP al ESP32)
+            $ping_exitoso = true; // Placeholder - implementar lógica real de ping
+
+            if ($ping_exitoso) {
+                // Actualizar última conexión
+                $this->db->update('dispositivos', 
+                    ['ultimo_ping' => date('Y-m-d H:i:s')], 
+                    ['id' => $id]
+                );
+                
+                return $this->respuestaJSON(['success' => true, 'message' => 'Dispositivo respondió correctamente']);
+            } else {
+                return $this->respuestaJSON(['success' => false, 'message' => 'Sin respuesta del dispositivo']);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en ping dispositivo: " . $e->getMessage());
+            return $this->respuestaJSON(['error' => 'Error interno'], 500);
+        }
+    }
+
+    /**
+     * Respuesta JSON helper
+     */
+    private function respuestaJSON($data, $status = 200)
+    {
+        http_response_code($status);
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
     }
 }

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Notificaciones - Control de Asistencia</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>🔔 Prueba del Sistema de Notificaciones</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>Este panel te permite probar las notificaciones del navegador para el sistema de control de asistencia.</p>
+                        
+                        <div class="alert alert-info">
+                            <strong>Estado de permisos:</strong> <span id="permission-status">Verificando...</span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <button id="request-permission" class="btn btn-primary mb-3">Solicitar Permisos</button>
+                                <button id="test-normal" class="btn btn-success mb-3">Notificación Normal</button>
+                                <button id="test-warning" class="btn btn-warning mb-3">Notificación de Alerta</button>
+                                <button id="test-critical" class="btn btn-danger mb-3">Notificación Crítica</button>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Tipos de notificaciones:</h6>
+                                <ul class="list-group">
+                                    <li class="list-group-item">📋 Nueva asistencia registrada</li>
+                                    <li class="list-group-item">⚠️ Empleado con tardanzas frecuentes</li>
+                                    <li class="list-group-item">🚨 Ausencias sin justificar</li>
+                                    <li class="list-group-item">📶 Dispositivo desconectado</li>
+                                    <li class="list-group-item">🛡️ Marcación sospechosa</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Log de notificaciones:</h6>
+                            <div id="notification-log" class="border p-3" style="height: 200px; overflow-y: auto; background-color: #f8f9fa;">
+                                <small class="text-muted">Las notificaciones aparecerán aquí...</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="../" class="btn btn-secondary">← Volver al Sistema</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado de las notificaciones
+        let notificationPermission = 'default';
+        
+        // Elementos del DOM
+        const permissionStatus = document.getElementById('permission-status');
+        const requestPermissionBtn = document.getElementById('request-permission');
+        const testNormalBtn = document.getElementById('test-normal');
+        const testWarningBtn = document.getElementById('test-warning');
+        const testCriticalBtn = document.getElementById('test-critical');
+        const notificationLog = document.getElementById('notification-log');
+        
+        // Función para registrar en el log
+        function logMessage(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<small class="text-${type}">[${timestamp}] ${message}</small>`;
+            notificationLog.appendChild(logEntry);
+            notificationLog.scrollTop = notificationLog.scrollHeight;
+        }
+        
+        // Verificar estado inicial de permisos
+        function checkPermissionStatus() {
+            if (!('Notification' in window)) {
+                permissionStatus.textContent = '❌ No soportado por el navegador';
+                permissionStatus.className = 'text-danger';
+                logMessage('Notificaciones no soportadas por este navegador', 'danger');
+                return false;
+            }
+            
+            notificationPermission = Notification.permission;
+            
+            switch (notificationPermission) {
+                case 'granted':
+                    permissionStatus.textContent = '✅ Permisos concedidos';
+                    permissionStatus.className = 'text-success';
+                    requestPermissionBtn.disabled = true;
+                    requestPermissionBtn.textContent = 'Permisos Ya Concedidos';
+                    logMessage('Permisos de notificación ya concedidos', 'success');
+                    break;
+                    
+                case 'denied':
+                    permissionStatus.textContent = '❌ Permisos denegados';
+                    permissionStatus.className = 'text-danger';
+                    logMessage('Permisos de notificación denegados. Habilitar en configuración del navegador.', 'danger');
+                    break;
+                    
+                default:
+                    permissionStatus.textContent = '⏳ Permisos pendientes';
+                    permissionStatus.className = 'text-warning';
+                    logMessage('Permisos de notificación pendientes de autorización', 'warning');
+                    break;
+            }
+            
+            return notificationPermission === 'granted';
+        }
+        
+        // Solicitar permisos
+        async function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('Tu navegador no soporta notificaciones');
+                return false;
+            }
+            
+            logMessage('Solicitando permisos de notificación...', 'info');
+            
+            try {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission;
+                
+                if (permission === 'granted') {
+                    permissionStatus.textContent = '✅ Permisos concedidos';
+                    permissionStatus.className = 'text-success';
+                    requestPermissionBtn.disabled = true;
+                    requestPermissionBtn.textContent = 'Permisos Concedidos';
+                    logMessage('¡Permisos concedidos exitosamente!', 'success');
+                    return true;
+                } else {
+                    logMessage('Permisos denegados por el usuario', 'danger');
+                    return false;
+                }
+            } catch (error) {
+                logMessage('Error al solicitar permisos: ' + error.message, 'danger');
+                return false;
+            }
+        }
+        
+        // Mostrar notificación de prueba
+        function showTestNotification(type, title, message, icon = null) {
+            if (notificationPermission !== 'granted') {
+                alert('Primero debes conceder permisos de notificación');
+                return;
+            }
+            
+            const options = {
+                body: message,
+                icon: icon || '/ControlDeAsistencia/public/favicon.ico',
+                badge: '/ControlDeAsistencia/public/favicon.ico',
+                tag: `test-${type}`,
+                requireInteraction: type === 'critical',
+                silent: false,
+                renotify: true,
+                timestamp: Date.now()
+            };
+            
+            try {
+                const notification = new Notification(title, options);
+                
+                notification.onclick = function() {
+                    window.focus();
+                    notification.close();
+                    logMessage(`Notificación "${title}" fue clickeada`, 'info');
+                };
+                
+                notification.onshow = function() {
+                    logMessage(`Notificación "${title}" mostrada correctamente`, 'success');
+                };
+                
+                notification.onerror = function() {
+                    logMessage(`Error al mostrar notificación "${title}"`, 'danger');
+                };
+                
+                // Auto-cerrar después de 5 segundos (excepto críticas)
+                if (type !== 'critical') {
+                    setTimeout(() => {
+                        notification.close();
+                    }, 5000);
+                }
+                
+            } catch (error) {
+                logMessage('Error al crear notificación: ' + error.message, 'danger');
+            }
+        }
+        
+        // Event listeners
+        requestPermissionBtn.addEventListener('click', requestNotificationPermission);
+        
+        testNormalBtn.addEventListener('click', () => {
+            showTestNotification(
+                'normal',
+                '📋 Control de Asistencia',
+                'Nueva asistencia registrada: Juan Pérez marcó entrada a las 08:30 AM'
+            );
+        });
+        
+        testWarningBtn.addEventListener('click', () => {
+            showTestNotification(
+                'warning',
+                '⚠️ Alerta de Tardanzas',
+                'María García tiene 3 tardanzas consecutivas esta semana'
+            );
+        });
+        
+        testCriticalBtn.addEventListener('click', () => {
+            showTestNotification(
+                'critical',
+                '🚨 Alerta Crítica',
+                '5 empleados ausentes sin justificación después de las 10:00 AM'
+            );
+        });
+        
+        // Función para simular actualización en tiempo real
+        function simulateRealTimeUpdates() {
+            if (notificationPermission === 'granted') {
+                const updates = [
+                    {
+                        type: 'normal',
+                        title: '📋 Nueva Asistencia',
+                        message: 'Carlos López marcó salida a las 17:15 PM'
+                    },
+                    {
+                        type: 'warning', 
+                        title: '📶 Dispositivo Offline',
+                        message: 'Lector Principal en Recepción perdió conexión'
+                    },
+                    {
+                        type: 'normal',
+                        title: '📋 Nueva Asistencia',
+                        message: 'Ana Martínez marcó entrada a las 08:45 AM'
+                    }
+                ];
+                
+                let index = 0;
+                const interval = setInterval(() => {
+                    if (index < updates.length) {
+                        const update = updates[index];
+                        showTestNotification(update.type, update.title, update.message);
+                        index++;
+                    } else {
+                        clearInterval(interval);
+                        logMessage('Simulación de actualizaciones completada', 'info');
+                    }
+                }, 8000); // Cada 8 segundos
+                
+                logMessage('Iniciando simulación de actualizaciones en tiempo real...', 'info');
+            }
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            checkPermissionStatus();
+            logMessage('Sistema de prueba de notificaciones iniciado', 'info');
+            
+            // Agregar botón para simulación
+            const simulateBtn = document.createElement('button');
+            simulateBtn.className = 'btn btn-info mb-3';
+            simulateBtn.textContent = 'Simular Actualizaciones';
+            simulateBtn.onclick = simulateRealTimeUpdates;
+            testCriticalBtn.parentNode.appendChild(simulateBtn);
+        });
+        
+        // Verificar soporte para Service Workers (para notificaciones avanzadas)
+        if ('serviceWorker' in navigator) {
+            logMessage('Service Workers soportados - Notificaciones avanzadas disponibles', 'success');
+        } else {
+            logMessage('Service Workers no soportados - Funcionalidad limitada', 'warning');
+        }
+    </script>
+</body>
+</html>

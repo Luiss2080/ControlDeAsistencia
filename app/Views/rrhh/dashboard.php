@@ -1,28 +1,77 @@
 <?php
-
 /**
  * Dashboard de Recursos Humanos
  * Sistema de Control de Asistencia
  */
 ?>
 
-<div class="stats-grid">
-    <div class="stat-card success">
+<!-- Alertas en tiempo real -->
+<?php if (!empty($alertas)): ?>
+<div class="alertas-tiempo-real mb-4">
+    <?php foreach ($alertas as $alerta): ?>
+        <div class="alert alert-<?= $alerta['tipo'] ?> alert-dismissible fade show" role="alert">
+            <i class="fas fa-<?= $alerta['icono'] ?>"></i>
+            <strong><?= $alerta['titulo'] ?></strong> <?= $alerta['mensaje'] ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<div class="stats-grid" id="stats-container">
+    <div class="stat-card success" id="stat-empleados">
         <div class="stat-number"><?php echo ($estadisticas['total_empleados'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-users"></i> Total Empleados</div>
+        <div class="stat-trend">
+            <small class="text-muted">Activos en sistema</small>
+        </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" id="stat-presentes">
         <div class="stat-number"><?php echo ($estadisticas['presentes_hoy'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-user-check"></i> Presentes Hoy</div>
+        <div class="stat-trend">
+            <small class="text-success">
+                <?= round((($estadisticas['presentes_hoy'] ?? 0) / max(($estadisticas['total_empleados'] ?? 1), 1)) * 100, 1) ?>% asistencia
+            </small>
+        </div>
     </div>
-    <div class="stat-card warning">
+    <div class="stat-card warning" id="stat-tardanzas">
         <div class="stat-number"><?php echo ($estadisticas['tardanzas_hoy'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-clock"></i> Tardanzas Hoy</div>
+        <div class="stat-trend">
+            <small class="text-warning">
+                <?php if (($estadisticas['tardanzas_hoy'] ?? 0) > 0): ?>
+                    <i class="fas fa-arrow-up"></i> Requiere atención
+                <?php else: ?>
+                    <i class="fas fa-check"></i> Sin tardanzas
+                <?php endif; ?>
+            </small>
+        </div>
     </div>
-    <div class="stat-card danger">
+    <div class="stat-card danger" id="stat-ausentes">
         <div class="stat-number"><?php echo ($estadisticas['ausentes_hoy'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-user-times"></i> Ausentes Hoy</div>
+        <div class="stat-trend">
+            <small class="text-danger">
+                <?php if (($estadisticas['ausentes_hoy'] ?? 0) > 0): ?>
+                    <i class="fas fa-exclamation-triangle"></i> Revisar ausencias
+                <?php else: ?>
+                    <i class="fas fa-check"></i> Todos presentes
+                <?php endif; ?>
+            </small>
+        </div>
     </div>
+</div>
+
+<!-- Indicador de última actualización -->
+<div class="update-indicator mb-3">
+    <small class="text-muted">
+        <i class="fas fa-clock"></i> Última actualización: 
+        <span id="last-update"><?= date('H:i:s') ?></span>
+        <button class="btn btn-link btn-sm p-0 ms-2" onclick="actualizarDashboard()" id="btn-actualizar">
+            <i class="fas fa-sync-alt"></i> Actualizar ahora
+        </button>
+    </small>
 </div>
 
 <div class="nav-tabs">
@@ -366,6 +415,193 @@
     function verDetalleEmpleado(email) {
         mostrarAlerta("Ver detalle del empleado: " + email + "\n\nEsta función abrirá el perfil completo del empleado con su historial de asistencias.", 'info');
     }
+
+    // Sistema de actualizaciones en tiempo real
+    let actualizacionEnCurso = false;
+    let intervalId = null;
+
+    function actualizarDashboard() {
+        if (actualizacionEnCurso) return;
+        
+        actualizacionEnCurso = true;
+        const btnActualizar = document.getElementById('btn-actualizar');
+        const iconoOriginal = btnActualizar.innerHTML;
+        
+        btnActualizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+        btnActualizar.disabled = true;
+
+        fetch('/rrhh/api/estadisticas-tiempo-real', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                actualizarEstadisticas(data.estadisticas);
+                actualizarAlertas(data.alertas);
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+                
+                // Mostrar notificación si hay nuevas alertas críticas
+                if (data.alertas && data.alertas.length > 0) {
+                    data.alertas.forEach(alerta => {
+                        if (alerta.critica) {
+                            mostrarNotificacionTiempoReal(alerta);
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error actualizando dashboard:', error);
+            mostrarAlerta('Error al actualizar los datos. Inténtalo de nuevo.', 'error');
+        })
+        .finally(() => {
+            actualizacionEnCurso = false;
+            btnActualizar.innerHTML = iconoOriginal;
+            btnActualizar.disabled = false;
+        });
+    }
+
+    function actualizarEstadisticas(estadisticas) {
+        // Actualizar números con animación
+        animarNumero('stat-empleados', estadisticas.total_empleados);
+        animarNumero('stat-presentes', estadisticas.presentes_hoy);
+        animarNumero('stat-tardanzas', estadisticas.tardanzas_hoy);
+        animarNumero('stat-ausentes', estadisticas.ausentes_hoy);
+
+        // Actualizar colores de estado
+        actualizarColorEstado('stat-tardanzas', estadisticas.tardanzas_hoy, 'warning');
+        actualizarColorEstado('stat-ausentes', estadisticas.ausentes_hoy, 'danger');
+    }
+
+    function animarNumero(elementId, nuevoValor) {
+        const elemento = document.querySelector(`#${elementId} .stat-number`);
+        const valorActual = parseInt(elemento.textContent) || 0;
+        
+        if (valorActual !== nuevoValor) {
+            elemento.style.transform = 'scale(1.1)';
+            elemento.style.transition = 'transform 0.3s ease';
+            
+            setTimeout(() => {
+                elemento.textContent = nuevoValor;
+                elemento.style.transform = 'scale(1)';
+            }, 150);
+        }
+    }
+
+    function actualizarColorEstado(elementId, valor, tipoClase) {
+        const elemento = document.getElementById(elementId);
+        if (valor > 0) {
+            elemento.classList.add(tipoClase);
+            elemento.classList.add('pulse');
+        } else {
+            elemento.classList.remove(tipoClase);
+            elemento.classList.remove('pulse');
+        }
+    }
+
+    function actualizarAlertas(alertas) {
+        const contenedorAlertas = document.querySelector('.alertas-tiempo-real');
+        if (!contenedorAlertas) return;
+
+        // Limpiar alertas existentes
+        contenedorAlertas.innerHTML = '';
+
+        if (alertas && alertas.length > 0) {
+            alertas.forEach(alerta => {
+                const alertaDiv = document.createElement('div');
+                alertaDiv.className = `alert alert-${alerta.tipo} alert-dismissible fade show`;
+                alertaDiv.innerHTML = `
+                    <i class="fas fa-${alerta.icono}"></i>
+                    <strong>${alerta.titulo}</strong> ${alerta.mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                contenedorAlertas.appendChild(alertaDiv);
+            });
+        }
+    }
+
+    function mostrarNotificacionTiempoReal(alerta) {
+        // Usar Notification API si está disponible
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(`${alerta.titulo}`, {
+                body: alerta.mensaje,
+                icon: '/public/css/img/logo.png',
+                tag: 'asistencia-alert',
+                requireInteraction: true
+            });
+        }
+    }
+
+    function iniciarActualizacionesAutomaticas() {
+        // Actualizar cada 30 segundos
+        intervalId = setInterval(actualizarDashboard, 30000);
+    }
+
+    function detenerActualizacionesAutomaticas() {
+        if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+    }
+
+    // Solicitar permisos de notificación
+    function solicitarPermisosNotificacion() {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+
+    // Inicializar cuando la página se carga
+    document.addEventListener('DOMContentLoaded', function() {
+        solicitarPermisosNotificacion();
+        iniciarActualizacionesAutomaticas();
+        
+        // Detener actualizaciones cuando la página se oculta
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                detenerActualizacionesAutomaticas();
+            } else {
+                iniciarActualizacionesAutomaticas();
+            }
+        });
+    });
+
+    // CSS para animaciones
+    const style = document.createElement('style');
+    style.textContent = `
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .stat-trend {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .update-indicator {
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(0,0,0,0.05);
+            border-radius: 0.25rem;
+        }
+        
+        .alertas-tiempo-real {
+            position: relative;
+            z-index: 1000;
+        }
+    `;
+    document.head.appendChild(style);
 
     // Inicializar DataTables cuando el DOM esté listo
     document.addEventListener('DOMContentLoaded', function() {

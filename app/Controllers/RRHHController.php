@@ -70,7 +70,17 @@ class RRHHController
         $datos_reporte = $this->generarReporte($filtros);
         $empleados = $this->db->fetchAll("SELECT id, nombres, apellidos, numero_empleado FROM usuarios WHERE activo = 1 AND rol = 'empleado' ORDER BY apellidos, nombres");
 
-        include __DIR__ . '/../Views/rrhh/reportes.php';
+        // Obtener usuario logueado
+        $usuario = $this->obtenerUsuarioLogueado();
+
+        $this->renderViewWithLayout('rrhh/reportes', [
+            'usuario' => $usuario,
+            'titulo' => 'Reportes de Asistencia',
+            'seccion' => 'Reportes',
+            'datos_reporte' => $datos_reporte,
+            'empleados' => $empleados,
+            'filtros' => $filtros
+        ]);
     }
 
     /**
@@ -355,6 +365,145 @@ class RRHHController
         echo "</table>";
         echo "</body></html>";
         exit;
+    }
+
+    /**
+     * API para estadísticas en tiempo real
+     */
+    public function estadisticasTiempoReal()
+    {
+        header('Content-Type: application/json');
+        
+        try {
+            // Obtener estadísticas actualizadas
+            $estadisticas = $this->obtenerEstadisticasHoy();
+            
+            // Obtener alertas críticas
+            $alertas = $this->obtenerAlertasCriticas();
+            
+            echo json_encode([
+                'success' => true,
+                'estadisticas' => $estadisticas,
+                'alertas' => $alertas,
+                'timestamp' => date('Y-m-d H:i:s')
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error en estadísticas tiempo real: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => 'Error al obtener estadísticas'
+            ]);
+        }
+        exit;
+    }
+
+    /**
+     * Obtener alertas críticas del sistema
+     */
+    private function obtenerAlertasCriticas()
+    {
+        $alertas = [];
+        
+        try {
+            // Empleados con tardanzas consecutivas (3 días)
+            $tardanzasConsecutivas = $this->db->fetchAll("
+                SELECT u.nombres, u.apellidos, COUNT(*) as dias_tardanza
+                FROM asistencias a
+                JOIN usuarios u ON a.usuario_id = u.id
+                WHERE a.es_tardanza = 1 
+                AND a.fecha_hora >= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+                GROUP BY u.id
+                HAVING dias_tardanza >= 3
+                ORDER BY dias_tardanza DESC
+                LIMIT 5
+            ");
+            
+            foreach ($tardanzasConsecutivas as $empleado) {
+                $alertas[] = [
+                    'tipo' => 'warning',
+                    'icono' => 'exclamation-triangle',
+                    'titulo' => 'Tardanzas Frecuentes',
+                    'mensaje' => "{$empleado['nombres']} {$empleado['apellidos']} tiene {$empleado['dias_tardanza']} tardanzas en 3 días",
+                    'critica' => true
+                ];
+            }
+            
+            // Ausencias sin justificar
+            $ausenciasSinJustificar = $this->db->fetchAll("
+                SELECT u.nombres, u.apellidos
+                FROM usuarios u
+                WHERE u.activo = 1 AND u.rol = 'empleado'
+                AND u.id NOT IN (
+                    SELECT DISTINCT usuario_id 
+                    FROM asistencias 
+                    WHERE DATE(fecha_hora) = CURDATE()
+                )
+                AND CURTIME() > '10:00:00'
+                LIMIT 10
+            ");
+            
+            if (count($ausenciasSinJustificar) > 0) {
+                $alertas[] = [
+                    'tipo' => 'danger',
+                    'icono' => 'user-times',
+                    'titulo' => 'Ausencias Sin Justificar',
+                    'mensaje' => count($ausenciasSinJustificar) . " empleados ausentes después de las 10:00 AM",
+                    'critica' => true
+                ];
+            }
+            
+            // Dispositivos desconectados
+            $dispositivosOffline = $this->db->fetchAll("
+                SELECT nombre, ubicacion
+                FROM dispositivos 
+                WHERE estado = 'activo' 
+                AND (ultimo_ping IS NULL OR ultimo_ping < DATE_SUB(NOW(), INTERVAL 15 MINUTE))
+            ");
+            
+            foreach ($dispositivosOffline as $dispositivo) {
+                $alertas[] = [
+                    'tipo' => 'info',
+                    'icono' => 'wifi',
+                    'titulo' => 'Dispositivo Desconectado',
+                    'mensaje' => "Lector '{$dispositivo['nombre']}' en {$dispositivo['ubicacion']} sin conexión",
+                    'critica' => false
+                ];
+            }
+            
+            // Marcaciones sospechosas (misma tarjeta en diferentes ubicaciones muy rápido)
+            $marcacionesSospechosas = $this->db->fetchAll("
+                SELECT a1.usuario_id, u.nombres, u.apellidos, 
+                       d1.nombre as dispositivo1, d2.nombre as dispositivo2,
+                       a1.fecha_hora as marcacion1, a2.fecha_hora as marcacion2
+                FROM asistencias a1
+                JOIN asistencias a2 ON a1.usuario_id = a2.usuario_id
+                JOIN usuarios u ON a1.usuario_id = u.id
+                JOIN dispositivos d1 ON a1.dispositivo_id = d1.id
+                JOIN dispositivos d2 ON a2.dispositivo_id = d2.id
+                WHERE DATE(a1.fecha_hora) = CURDATE()
+                AND DATE(a2.fecha_hora) = CURDATE()
+                AND a1.dispositivo_id != a2.dispositivo_id
+                AND ABS(TIMESTAMPDIFF(MINUTE, a1.fecha_hora, a2.fecha_hora)) < 5
+                AND a1.id != a2.id
+                LIMIT 3
+            ");
+            
+            foreach ($marcacionesSospechosas as $sospechosa) {
+                $alertas[] = [
+                    'tipo' => 'warning',
+                    'icono' => 'shield-alt',
+                    'titulo' => 'Marcación Sospechosa',
+                    'mensaje' => "{$sospechosa['nombres']} {$sospechosa['apellidos']} marcó en 2 dispositivos diferentes en menos de 5 minutos",
+                    'critica' => true
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error obteniendo alertas críticas: " . $e->getMessage());
+        }
+        
+        return $alertas;
     }
 
     /**
