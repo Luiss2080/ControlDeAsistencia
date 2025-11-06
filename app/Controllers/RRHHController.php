@@ -373,21 +373,20 @@ class RRHHController
     public function estadisticasTiempoReal()
     {
         header('Content-Type: application/json');
-        
+
         try {
             // Obtener estadísticas actualizadas
             $estadisticas = $this->obtenerEstadisticasHoy();
-            
+
             // Obtener alertas críticas
             $alertas = $this->obtenerAlertasCriticas();
-            
+
             echo json_encode([
                 'success' => true,
                 'estadisticas' => $estadisticas,
                 'alertas' => $alertas,
                 'timestamp' => date('Y-m-d H:i:s')
             ]);
-            
         } catch (Exception $e) {
             error_log("Error en estadísticas tiempo real: " . $e->getMessage());
             echo json_encode([
@@ -404,7 +403,7 @@ class RRHHController
     private function obtenerAlertasCriticas()
     {
         $alertas = [];
-        
+
         try {
             // Empleados con tardanzas consecutivas (3 días)
             $tardanzasConsecutivas = $this->db->fetchAll("
@@ -418,7 +417,7 @@ class RRHHController
                 ORDER BY dias_tardanza DESC
                 LIMIT 5
             ");
-            
+
             foreach ($tardanzasConsecutivas as $empleado) {
                 $alertas[] = [
                     'tipo' => 'warning',
@@ -428,7 +427,7 @@ class RRHHController
                     'critica' => true
                 ];
             }
-            
+
             // Ausencias sin justificar
             $ausenciasSinJustificar = $this->db->fetchAll("
                 SELECT u.nombres, u.apellidos
@@ -442,7 +441,7 @@ class RRHHController
                 AND CURTIME() > '10:00:00'
                 LIMIT 10
             ");
-            
+
             if (count($ausenciasSinJustificar) > 0) {
                 $alertas[] = [
                     'tipo' => 'danger',
@@ -452,7 +451,7 @@ class RRHHController
                     'critica' => true
                 ];
             }
-            
+
             // Dispositivos desconectados
             $dispositivosOffline = $this->db->fetchAll("
                 SELECT nombre, ubicacion
@@ -460,7 +459,7 @@ class RRHHController
                 WHERE estado = 'activo' 
                 AND (ultimo_ping IS NULL OR ultimo_ping < DATE_SUB(NOW(), INTERVAL 15 MINUTE))
             ");
-            
+
             foreach ($dispositivosOffline as $dispositivo) {
                 $alertas[] = [
                     'tipo' => 'info',
@@ -470,7 +469,7 @@ class RRHHController
                     'critica' => false
                 ];
             }
-            
+
             // Marcaciones sospechosas (misma tarjeta en diferentes ubicaciones muy rápido)
             $marcacionesSospechosas = $this->db->fetchAll("
                 SELECT a1.usuario_id, u.nombres, u.apellidos, 
@@ -488,7 +487,7 @@ class RRHHController
                 AND a1.id != a2.id
                 LIMIT 3
             ");
-            
+
             foreach ($marcacionesSospechosas as $sospechosa) {
                 $alertas[] = [
                     'tipo' => 'warning',
@@ -498,11 +497,10 @@ class RRHHController
                     'critica' => true
                 ];
             }
-            
         } catch (Exception $e) {
             error_log("Error obteniendo alertas críticas: " . $e->getMessage());
         }
-        
+
         return $alertas;
     }
 

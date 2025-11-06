@@ -304,7 +304,6 @@ class AdminController
                 'usuarios_disponibles' => $usuarios_disponibles,
                 'filtros' => $filtros
             ]);
-
         } catch (Exception $e) {
             error_log("Error en tarjetas admin: " . $e->getMessage());
             $_SESSION['error'] = 'Error al cargar tarjetas';
@@ -676,7 +675,6 @@ class AdminController
                 } else {
                     $_SESSION['error'] = 'Error al registrar la tarjeta';
                 }
-
             } catch (Exception $e) {
                 error_log("Error creando tarjeta: " . $e->getMessage());
                 $_SESSION['error'] = 'Error interno al crear la tarjeta';
@@ -693,8 +691,9 @@ class AdminController
     public function desasignarTarjeta($uid)
     {
         try {
-            $resultado = $this->db->update('tarjetas_rfid', 
-                ['usuario_id' => null, 'fecha_asignacion' => null], 
+            $resultado = $this->db->update(
+                'tarjetas_rfid',
+                ['usuario_id' => null, 'fecha_asignacion' => null],
                 ['uid_tarjeta' => $uid]
             );
 
@@ -703,7 +702,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al desasignar la tarjeta';
             }
-
         } catch (Exception $e) {
             error_log("Error desasignando tarjeta: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al desasignar la tarjeta';
@@ -719,8 +717,9 @@ class AdminController
     public function bloquearTarjeta($uid)
     {
         try {
-            $resultado = $this->db->update('tarjetas_rfid', 
-                ['estado' => 'bloqueada'], 
+            $resultado = $this->db->update(
+                'tarjetas_rfid',
+                ['estado' => 'bloqueada'],
                 ['uid_tarjeta' => $uid]
             );
 
@@ -729,7 +728,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al bloquear la tarjeta';
             }
-
         } catch (Exception $e) {
             error_log("Error bloqueando tarjeta: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al bloquear la tarjeta';
@@ -745,8 +743,9 @@ class AdminController
     public function activarTarjeta($uid)
     {
         try {
-            $resultado = $this->db->update('tarjetas_rfid', 
-                ['estado' => 'activa'], 
+            $resultado = $this->db->update(
+                'tarjetas_rfid',
+                ['estado' => 'activa'],
                 ['uid_tarjeta' => $uid]
             );
 
@@ -755,7 +754,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al activar la tarjeta';
             }
-
         } catch (Exception $e) {
             error_log("Error activando tarjeta: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al activar la tarjeta';
@@ -773,7 +771,7 @@ class AdminController
         try {
             // Verificar si la tarjeta tiene registros de asistencia
             $tiene_registros = $this->db->fetch(
-                "SELECT COUNT(*) as total FROM asistencias WHERE tarjeta_uid = ?", 
+                "SELECT COUNT(*) as total FROM asistencias WHERE tarjeta_uid = ?",
                 [$uid]
             );
 
@@ -790,7 +788,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al eliminar la tarjeta';
             }
-
         } catch (Exception $e) {
             error_log("Error eliminando tarjeta: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al eliminar la tarjeta';
@@ -806,8 +803,9 @@ class AdminController
     public function desactivarDispositivo($id)
     {
         try {
-            $resultado = $this->db->update('dispositivos', 
-                ['estado' => 'inactivo'], 
+            $resultado = $this->db->update(
+                'dispositivos',
+                ['estado' => 'inactivo'],
                 ['id' => $id]
             );
 
@@ -816,7 +814,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al desactivar el dispositivo';
             }
-
         } catch (Exception $e) {
             error_log("Error desactivando dispositivo: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al desactivar el dispositivo';
@@ -832,8 +829,9 @@ class AdminController
     public function activarDispositivo($id)
     {
         try {
-            $resultado = $this->db->update('dispositivos', 
-                ['estado' => 'activo'], 
+            $resultado = $this->db->update(
+                'dispositivos',
+                ['estado' => 'activo'],
                 ['id' => $id]
             );
 
@@ -842,7 +840,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al activar el dispositivo';
             }
-
         } catch (Exception $e) {
             error_log("Error activando dispositivo: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al activar el dispositivo';
@@ -860,7 +857,7 @@ class AdminController
         try {
             // Verificar si el dispositivo tiene registros de asistencia
             $tiene_registros = $this->db->fetch(
-                "SELECT COUNT(*) as total FROM asistencias WHERE dispositivo_id = ?", 
+                "SELECT COUNT(*) as total FROM asistencias WHERE dispositivo_id = ?",
                 [$id]
             );
 
@@ -877,7 +874,6 @@ class AdminController
             } else {
                 $_SESSION['error'] = 'Error al eliminar el dispositivo';
             }
-
         } catch (Exception $e) {
             error_log("Error eliminando dispositivo: " . $e->getMessage());
             $_SESSION['error'] = 'Error interno al eliminar el dispositivo';
@@ -943,7 +939,6 @@ class AdminController
             ";
 
             return $this->respuestaJSON(['html' => $html]);
-
         } catch (Exception $e) {
             error_log("Error obteniendo detalles dispositivo: " . $e->getMessage());
             return $this->respuestaJSON(['error' => 'Error interno'], 500);
@@ -957,7 +952,7 @@ class AdminController
     {
         try {
             $dispositivo = $this->db->fetch("SELECT * FROM dispositivos WHERE id = ?", [$id]);
-            
+
             if (!$dispositivo) {
                 return $this->respuestaJSON(['error' => 'Dispositivo no encontrado'], 404);
             }
@@ -967,16 +962,16 @@ class AdminController
 
             if ($ping_exitoso) {
                 // Actualizar última conexión
-                $this->db->update('dispositivos', 
-                    ['ultimo_ping' => date('Y-m-d H:i:s')], 
+                $this->db->update(
+                    'dispositivos',
+                    ['ultimo_ping' => date('Y-m-d H:i:s')],
                     ['id' => $id]
                 );
-                
+
                 return $this->respuestaJSON(['success' => true, 'message' => 'Dispositivo respondió correctamente']);
             } else {
                 return $this->respuestaJSON(['success' => false, 'message' => 'Sin respuesta del dispositivo']);
             }
-
         } catch (Exception $e) {
             error_log("Error en ping dispositivo: " . $e->getMessage());
             return $this->respuestaJSON(['error' => 'Error interno'], 500);

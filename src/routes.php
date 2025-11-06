@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Sistema de Rutas Simple para Control de Asistencia
  * Maneja las rutas principales del sistema de forma sencilla
@@ -9,23 +10,26 @@ use App\Controllers\AdminController;
 use App\Controllers\RRHHController;
 use App\Controllers\EmpleadoController;
 
-class Router {
+class Router
+{
     private $routes = [];
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->definirRutas();
     }
-    
+
     /**
      * Definir todas las rutas del sistema
      */
-    private function definirRutas() {
+    private function definirRutas()
+    {
         // Rutas de autenticación
         $this->routes['GET']['/'] = [AuthController::class, 'mostrarLogin'];
         $this->routes['GET']['/login'] = [AuthController::class, 'mostrarLogin'];
         $this->routes['POST']['/login'] = [AuthController::class, 'procesarLogin'];
         $this->routes['GET']['/logout'] = [AuthController::class, 'logout'];
-        
+
         // Rutas del panel administrativo
         $this->routes['GET']['/admin'] = [AdminController::class, 'dashboard'];
         $this->routes['GET']['/admin/dashboard'] = [AdminController::class, 'dashboard'];
@@ -52,7 +56,7 @@ class Router {
         $this->routes['GET']['/admin/eliminar-usuario/{id}'] = [AdminController::class, 'eliminarUsuario'];
         $this->routes['GET']['/admin/eliminar-dispositivo/{token}'] = [AdminController::class, 'eliminarDispositivo'];
         $this->routes['GET']['/admin/eliminar-tarjeta/{uid}'] = [AdminController::class, 'eliminarTarjeta'];
-        
+
         // Rutas del panel de RRHH
         $this->routes['GET']['/rrhh'] = [RRHHController::class, 'dashboard'];
         $this->routes['GET']['/rrhh/dashboard'] = [RRHHController::class, 'dashboard'];
@@ -61,40 +65,41 @@ class Router {
         $this->routes['POST']['/rrhh/exportar-reporte'] = [RRHHController::class, 'exportarReporte'];
         $this->routes['GET']['/rrhh/empleado/{id}'] = [RRHHController::class, 'verEmpleado'];
         $this->routes['GET']['/rrhh/estadisticas-tiempo-real'] = [RRHHController::class, 'estadisticasTiempoReal'];
-        
+
         // Rutas del panel de empleados
         $this->routes['GET']['/empleado'] = [EmpleadoController::class, 'dashboard'];
         $this->routes['GET']['/empleado/dashboard'] = [EmpleadoController::class, 'dashboard'];
         $this->routes['GET']['/empleado/historial'] = [EmpleadoController::class, 'historial'];
-        
+
         // API para ESP32 (desde api/index.php)
         $this->routes['POST']['/api/asistencia'] = 'api';
         $this->routes['GET']['/api/ping'] = 'api';
     }
-    
+
     /**
      * Procesar la ruta actual
      */
-    public function procesarRuta() {
+    public function procesarRuta()
+    {
         $metodo = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        
+
         // DEBUG: Mostrar información de la ruta
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
             echo "<!-- DEBUG ROUTER: Método=$metodo, URI original=$uri -->\n";
         }
-        
+
         // Normalizar la URI removiendo el path base de XAMPP
         $uri = str_replace('/ControlDeAsistencia', '', $uri);
         $uri = str_replace('/public', '', $uri);
         $uri = rtrim($uri, '/');
         if (empty($uri)) $uri = '/';
-        
+
         // DEBUG: Mostrar URI normalizada
         if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
             echo "<!-- DEBUG ROUTER: URI normalizada=$uri -->\n";
         }
-        
+
         // Buscar ruta exacta
         if (isset($this->routes[$metodo][$uri])) {
             if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
@@ -103,7 +108,7 @@ class Router {
             $this->ejecutarControlador($this->routes[$metodo][$uri], []);
             return;
         }
-        
+
         // Buscar rutas con parámetros
         foreach ($this->routes[$metodo] as $patron => $controlador) {
             $parametros = $this->coincidirRuta($patron, $uri);
@@ -112,45 +117,47 @@ class Router {
                 return;
             }
         }
-        
+
         // Ruta no encontrada
         $this->error404();
     }
-    
+
     /**
      * Verificar si una ruta coincide con un patrón
      */
-    private function coincidirRuta($patron, $uri) {
+    private function coincidirRuta($patron, $uri)
+    {
         // Convertir patrón a regex
         $regex = preg_replace('/\{([^}]+)\}/', '([^/]+)', $patron);
         $regex = '#^' . $regex . '$#';
-        
+
         if (preg_match($regex, $uri, $matches)) {
             array_shift($matches); // Remover la coincidencia completa
             return $matches;
         }
-        
+
         return false;
     }
-    
+
     /**
      * Ejecutar el controlador correspondiente
      */
-    private function ejecutarControlador($controlador, $parametros) {
+    private function ejecutarControlador($controlador, $parametros)
+    {
         if ($controlador === 'api') {
             // Redirigir a la API
             require_once __DIR__ . '/api/index.php';
             return;
         }
-        
+
         if (is_array($controlador)) {
             $clase = $controlador[0];
             $metodo = $controlador[1];
-            
+
             // Verificar si la clase existe
             if (class_exists($clase)) {
                 $instancia = new $clase();
-                
+
                 if (method_exists($instancia, $metodo)) {
                     call_user_func_array([$instancia, $metodo], $parametros);
                 } else {
@@ -163,11 +170,12 @@ class Router {
             $this->error500("Controlador inválido");
         }
     }
-    
+
     /**
      * Mostrar error 404
      */
-    private function error404() {
+    private function error404()
+    {
         http_response_code(404);
         echo '<!DOCTYPE html>
 <html lang="es">
@@ -193,11 +201,12 @@ class Router {
 </body>
 </html>';
     }
-    
+
     /**
      * Mostrar error 500
      */
-    private function error500($mensaje = "Error interno del servidor") {
+    private function error500($mensaje = "Error interno del servidor")
+    {
         http_response_code(500);
         echo '<!DOCTYPE html>
 <html lang="es">
@@ -222,8 +231,7 @@ class Router {
     </div>
 </body>
 </html>';
-        
+
         error_log("Error 500: " . $mensaje);
     }
 }
-?>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Vista de Gestión de Tarjetas RFID
  * Sistema de Control de Asistencia
@@ -46,8 +47,8 @@
                 </div>
                 <div class="col-md-4">
                     <label>Buscar</label>
-                    <input type="text" name="buscar" class="form-control" 
-                           placeholder="UID, empleado..." value="<?= htmlspecialchars($_GET['buscar'] ?? '') ?>">
+                    <input type="text" name="buscar" class="form-control"
+                        placeholder="UID, empleado..." value="<?= htmlspecialchars($_GET['buscar'] ?? '') ?>">
                 </div>
                 <div class="col-md-2">
                     <label>&nbsp;</label>
@@ -128,7 +129,7 @@
                                                 <i class="fas fa-user-plus"></i> Asignar
                                             </button>
                                         <?php endif; ?>
-                                        
+
                                         <?php if ($tarjeta['estado'] === 'activa'): ?>
                                             <button class="btn btn-danger" onclick="bloquearTarjeta('<?= $tarjeta['uid_tarjeta'] ?>')">
                                                 <i class="fas fa-ban"></i> Bloquear
@@ -138,7 +139,7 @@
                                                 <i class="fas fa-check"></i> Activar
                                             </button>
                                         <?php endif; ?>
-                                        
+
                                         <button class="btn btn-danger" onclick="eliminarTarjeta('<?= $tarjeta['uid_tarjeta'] ?>')">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -173,12 +174,12 @@
                     <div class="mb-3">
                         <label class="form-label">UID de la Tarjeta *</label>
                         <input type="text" name="uid_tarjeta" class="form-control" required
-                               placeholder="Ej: A1B2C3D4" maxlength="50">
+                            placeholder="Ej: A1B2C3D4" maxlength="50">
                         <div class="form-text">
                             <i class="fas fa-info-circle"></i> Ingresa el UID hexadecimal de la tarjeta RFID
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Asignar a Empleado (opcional)</label>
                         <select name="usuario_id" class="form-control">
@@ -192,11 +193,11 @@
                             <?php endif; ?>
                         </select>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Descripción</label>
                         <textarea name="descripcion" class="form-control" rows="2"
-                                  placeholder="Descripción opcional de la tarjeta"></textarea>
+                            placeholder="Descripción opcional de la tarjeta"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -222,10 +223,10 @@
                 <input type="hidden" name="uid_tarjeta" id="uid_asignar">
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
+                        <i class="fas fa-info-circle"></i>
                         Tarjeta: <code id="uid_display"></code>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label class="form-label">Seleccionar Empleado *</label>
                         <select name="usuario_id" class="form-control" required>
@@ -252,78 +253,78 @@
 </div>
 
 <script>
-function mostrarModalNuevaTarjeta() {
-    new bootstrap.Modal(document.getElementById('modalNuevaTarjeta')).show();
-}
-
-function asignarTarjeta(uid) {
-    document.getElementById('uid_asignar').value = uid;
-    document.getElementById('uid_display').textContent = uid;
-    new bootstrap.Modal(document.getElementById('modalAsignarTarjeta')).show();
-}
-
-function reasignarTarjeta(uid) {
-    if (confirm('¿Estás seguro de que quieres reasignar esta tarjeta?')) {
-        asignarTarjeta(uid);
+    function mostrarModalNuevaTarjeta() {
+        new bootstrap.Modal(document.getElementById('modalNuevaTarjeta')).show();
     }
-}
 
-function desasignarTarjeta(uid) {
-    if (confirm('¿Estás seguro de que quieres desasignar esta tarjeta?')) {
-        window.location.href = `/admin/tarjetas/desasignar/${uid}`;
+    function asignarTarjeta(uid) {
+        document.getElementById('uid_asignar').value = uid;
+        document.getElementById('uid_display').textContent = uid;
+        new bootstrap.Modal(document.getElementById('modalAsignarTarjeta')).show();
     }
-}
 
-function bloquearTarjeta(uid) {
-    if (confirm('¿Estás seguro de que quieres bloquear esta tarjeta?')) {
-        window.location.href = `/admin/tarjetas/bloquear/${uid}`;
+    function reasignarTarjeta(uid) {
+        if (confirm('¿Estás seguro de que quieres reasignar esta tarjeta?')) {
+            asignarTarjeta(uid);
+        }
     }
-}
 
-function activarTarjeta(uid) {
-    if (confirm('¿Estás seguro de que quieres activar esta tarjeta?')) {
-        window.location.href = `/admin/tarjetas/activar/${uid}`;
+    function desasignarTarjeta(uid) {
+        if (confirm('¿Estás seguro de que quieres desasignar esta tarjeta?')) {
+            window.location.href = `/admin/tarjetas/desasignar/${uid}`;
+        }
     }
-}
 
-function eliminarTarjeta(uid) {
-    if (confirm('¿Estás seguro de que quieres eliminar esta tarjeta? Esta acción no se puede deshacer.')) {
-        window.location.href = `/admin/tarjetas/eliminar/${uid}`;
+    function bloquearTarjeta(uid) {
+        if (confirm('¿Estás seguro de que quieres bloquear esta tarjeta?')) {
+            window.location.href = `/admin/tarjetas/bloquear/${uid}`;
+        }
     }
-}
 
-function actualizarListado() {
-    window.location.reload();
-}
+    function activarTarjeta(uid) {
+        if (confirm('¿Estás seguro de que quieres activar esta tarjeta?')) {
+            window.location.href = `/admin/tarjetas/activar/${uid}`;
+        }
+    }
+
+    function eliminarTarjeta(uid) {
+        if (confirm('¿Estás seguro de que quieres eliminar esta tarjeta? Esta acción no se puede deshacer.')) {
+            window.location.href = `/admin/tarjetas/eliminar/${uid}`;
+        }
+    }
+
+    function actualizarListado() {
+        window.location.reload();
+    }
 </script>
 
 <style>
-.uid-code {
-    background: #f8f9fa;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-weight: bold;
-}
+    .uid-code {
+        background: #f8f9fa;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-weight: bold;
+    }
 
-.user-info strong {
-    color: #2c3e50;
-}
+    .user-info strong {
+        color: #2c3e50;
+    }
 
-.actions-bar {
-    margin-bottom: 1rem;
-}
+    .actions-bar {
+        margin-bottom: 1rem;
+    }
 
-.filter-form .row {
-    align-items: end;
-}
+    .filter-form .row {
+        align-items: end;
+    }
 
-.badge {
-    font-size: 0.8em;
-}
+    .badge {
+        font-size: 0.8em;
+    }
 
-.btn-group-sm .btn {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-}
+    .btn-group-sm .btn {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
 </style>

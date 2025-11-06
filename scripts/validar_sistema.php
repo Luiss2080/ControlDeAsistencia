@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Script de Validación Completa del Sistema de Control de Asistencia
  * Verifica que todos los componentes estén funcionando correctamente
@@ -38,7 +39,7 @@ foreach ($archivos_principales as $archivo => $descripcion) {
 echo "\n2. 🔧 VERIFICANDO SINTAXIS PHP\n";
 $archivos_php = [
     'app/Controllers/AuthController.php',
-    'app/Controllers/AdminController.php', 
+    'app/Controllers/AdminController.php',
     'app/Controllers/RRHHController.php',
     'app/Controllers/EmpleadoController.php',
     'app/Models/Database.php',
@@ -69,19 +70,19 @@ try {
         echo "   ❌ Extensión PDO MySQL no está cargada\n";
     } else {
         echo "   ✅ Extensiones PDO disponibles\n";
-        
+
         // Intentar conexión básica
         $host = 'localhost';
         $dbname = 'control_asistencia';
         $username = 'root';
         $password = '';
-        
+
         try {
             $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
+
             echo "   ✅ Conexión a base de datos exitosa\n";
-            
+
             // Verificar tablas principales
             $tablas = ['usuarios', 'dispositivos', 'tarjetas_rfid', 'asistencias'];
             foreach ($tablas as $tabla) {
@@ -93,7 +94,6 @@ try {
                     echo "   ❌ Tabla '$tabla': ERROR - {$e->getMessage()}\n";
                 }
             }
-            
         } catch (Exception $e) {
             echo "   ❌ Error de conexión: {$e->getMessage()}\n";
         }
@@ -106,7 +106,7 @@ try {
 echo "\n4. 🛣️ VERIFICANDO SISTEMA DE RUTAS\n";
 if (file_exists('src/routes.php')) {
     echo "   ✅ Archivo de rutas encontrado\n";
-    
+
     $rutas_criticas = [
         '/' => 'Página principal',
         '/login' => 'Inicio de sesión',
@@ -118,7 +118,7 @@ if (file_exists('src/routes.php')) {
         '/rrhh/estadisticas-tiempo-real' => 'API de estadísticas en tiempo real',
         '/empleado' => 'Panel de empleados'
     ];
-    
+
     foreach ($rutas_criticas as $ruta => $descripcion) {
         echo "   ✅ Ruta '$ruta' - $descripcion\n";
     }
@@ -130,13 +130,13 @@ if (file_exists('src/routes.php')) {
 echo "\n5. 📡 VERIFICANDO API PARA ESP32\n";
 if (file_exists('api/index.php')) {
     echo "   ✅ Archivo API encontrado\n";
-    
+
     // Verificar endpoints críticos
     $endpoints = [
         '/api/ping' => 'Verificación de conectividad',
         '/api/asistencia' => 'Registro de asistencias'
     ];
-    
+
     foreach ($endpoints as $endpoint => $descripcion) {
         echo "   ✅ Endpoint '$endpoint' - $descripcion\n";
     }
@@ -217,7 +217,7 @@ echo "==========================================\n";
 $funcionalidades = [
     "✅ Sistema de autenticación con roles (Admin, RRHH, Empleado)",
     "✅ Panel administrativo completo para gestión de usuarios",
-    "✅ Gestión de dispositivos ESP32 con monitoreo en tiempo real", 
+    "✅ Gestión de dispositivos ESP32 con monitoreo en tiempo real",
     "✅ Sistema completo de tarjetas RFID (crear, asignar, bloquear)",
     "✅ Panel de RRHH con reportes avanzados y exportación",
     "✅ Dashboard en tiempo real con notificaciones del navegador",
@@ -248,4 +248,3 @@ echo "4. Configurar dispositivos y tarjetas RFID desde el panel admin\n";
 echo "5. Probar notificaciones en /public/test-notifications.html\n\n";
 
 echo "✨ ¡IMPLEMENTACIÓN COMPLETADA EXITOSAMENTE! ✨\n";
-?>

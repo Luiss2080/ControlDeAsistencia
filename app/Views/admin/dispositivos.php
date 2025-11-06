@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Vista de Gestión de Dispositivos ESP32
  * Sistema de Control de Asistencia
@@ -29,14 +30,14 @@
     $activos = 0;
     $conectados = 0;
     $total_registros = 0;
-    
+
     foreach ($dispositivos ?? [] as $dispositivo) {
         if ($dispositivo['estado'] === 'activo') $activos++;
         if ($dispositivo['ultimo_ping'] && strtotime($dispositivo['ultimo_ping']) > (time() - 300)) $conectados++;
         $total_registros += $dispositivo['total_registros'];
     }
     ?>
-    
+
     <div class="stat-card">
         <div class="stat-number"><?= $total_dispositivos ?></div>
         <div class="stat-label"><i class="fas fa-microchip"></i> Total Dispositivos</div>
@@ -103,8 +104,8 @@
                                     <?= $dispositivo['ip_address'] ? htmlspecialchars($dispositivo['ip_address']) : '<span class="text-muted">No detectada</span>' ?>
                                 </td>
                                 <td>
-                                    <?= $ultimo_ping ? 
-                                        '<span title="' . $ultimo_ping . '">' . $this->tiempoTranscurrido($ultimo_ping) . '</span>' : 
+                                    <?= $ultimo_ping ?
+                                        '<span title="' . $ultimo_ping . '">' . $this->tiempoTranscurrido($ultimo_ping) . '</span>' :
                                         '<span class="text-muted">Nunca</span>' ?>
                                 </td>
                                 <td>
@@ -169,31 +170,31 @@
                             <div class="mb-3">
                                 <label class="form-label">Nombre del Dispositivo *</label>
                                 <input type="text" name="nombre" class="form-control" required
-                                       placeholder="Ej: Lector Principal">
+                                    placeholder="Ej: Lector Principal">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Ubicación *</label>
                                 <input type="text" name="ubicacion" class="form-control" required
-                                       placeholder="Ej: Entrada Principal - Piso 1">
+                                    placeholder="Ej: Entrada Principal - Piso 1">
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">MAC Address (opcional)</label>
                                 <input type="text" name="mac_address" class="form-control"
-                                       placeholder="Ej: AA:BB:CC:DD:EE:FF">
+                                    placeholder="Ej: AA:BB:CC:DD:EE:FF">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">IP Address (opcional)</label>
                                 <input type="text" name="ip_address" class="form-control"
-                                       placeholder="Ej: 192.168.1.100">
+                                    placeholder="Ej: 192.168.1.100">
                             </div>
                         </div>
                     </div>
@@ -201,11 +202,11 @@
                     <div class="mb-3">
                         <label class="form-label">Descripción</label>
                         <textarea name="descripcion" class="form-control" rows="3"
-                                  placeholder="Descripción adicional del dispositivo y su función"></textarea>
+                            placeholder="Descripción adicional del dispositivo y su función"></textarea>
                     </div>
 
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle"></i> 
+                        <i class="fas fa-info-circle"></i>
                         <strong>Nota:</strong> Se generará automáticamente un token único para el dispositivo.
                         Este token deberá configurarse en el código del ESP32.
                     </div>
@@ -237,152 +238,174 @@
 </div>
 
 <script>
-function mostrarModalNuevoDispositivo() {
-    new bootstrap.Modal(document.getElementById('modalNuevoDispositivo')).show();
-}
+    function mostrarModalNuevoDispositivo() {
+        new bootstrap.Modal(document.getElementById('modalNuevoDispositivo')).show();
+    }
 
-function verDetalles(dispositivoId) {
-    // Cargar detalles del dispositivo vía AJAX
-    fetch(`/admin/dispositivos/detalles/${dispositivoId}`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('detallesContent').innerHTML = data.html;
-            new bootstrap.Modal(document.getElementById('modalDetallesDispositivo')).show();
-        })
-        .catch(error => {
-            alert('Error al cargar los detalles del dispositivo');
-        });
-}
+    function verDetalles(dispositivoId) {
+        // Cargar detalles del dispositivo vía AJAX
+        fetch(`/admin/dispositivos/detalles/${dispositivoId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('detallesContent').innerHTML = data.html;
+                new bootstrap.Modal(document.getElementById('modalDetallesDispositivo')).show();
+            })
+            .catch(error => {
+                alert('Error al cargar los detalles del dispositivo');
+            });
+    }
 
-function editarDispositivo(dispositivoId) {
-    window.location.href = `/admin/dispositivos/editar/${dispositivoId}`;
-}
+    function editarDispositivo(dispositivoId) {
+        window.location.href = `/admin/dispositivos/editar/${dispositivoId}`;
+    }
 
-function pingDispositivo(dispositivoId) {
-    const btn = event.target.closest('button');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
-    btn.disabled = true;
+    function pingDispositivo(dispositivoId) {
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+        btn.disabled = true;
 
-    fetch(`/admin/dispositivos/ping/${dispositivoId}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                btn.innerHTML = '<i class="fas fa-check"></i> Conectado';
-                btn.className = 'btn btn-success btn-sm';
+        fetch(`/admin/dispositivos/ping/${dispositivoId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Conectado';
+                    btn.className = 'btn btn-success btn-sm';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.className = 'btn btn-info btn-sm';
+                        btn.disabled = false;
+                    }, 3000);
+                } else {
+                    btn.innerHTML = '<i class="fas fa-times"></i> Sin respuesta';
+                    btn.className = 'btn btn-danger btn-sm';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.className = 'btn btn-info btn-sm';
+                        btn.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                btn.className = 'btn btn-warning btn-sm';
                 setTimeout(() => {
                     btn.innerHTML = originalText;
                     btn.className = 'btn btn-info btn-sm';
                     btn.disabled = false;
                 }, 3000);
-            } else {
-                btn.innerHTML = '<i class="fas fa-times"></i> Sin respuesta';
-                btn.className = 'btn btn-danger btn-sm';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.className = 'btn btn-info btn-sm';
-                    btn.disabled = false;
-                }, 3000);
-            }
-        })
-        .catch(error => {
-            btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
-            btn.className = 'btn btn-warning btn-sm';
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.className = 'btn btn-info btn-sm';
-                btn.disabled = false;
-            }, 3000);
-        });
-}
-
-function desactivarDispositivo(dispositivoId) {
-    if (confirm('¿Estás seguro de que quieres desactivar este dispositivo?')) {
-        window.location.href = `/admin/dispositivos/desactivar/${dispositivoId}`;
+            });
     }
-}
 
-function activarDispositivo(dispositivoId) {
-    window.location.href = `/admin/dispositivos/activar/${dispositivoId}`;
-}
-
-function eliminarDispositivo(dispositivoId) {
-    if (confirm('¿Estás seguro de que quieres eliminar este dispositivo? Esta acción no se puede deshacer.')) {
-        window.location.href = `/admin/dispositivos/eliminar/${dispositivoId}`;
+    function desactivarDispositivo(dispositivoId) {
+        if (confirm('¿Estás seguro de que quieres desactivar este dispositivo?')) {
+            window.location.href = `/admin/dispositivos/desactivar/${dispositivoId}`;
+        }
     }
-}
 
-function verificarConectividad() {
-    alert('Verificando conectividad de todos los dispositivos...');
-    // Implementar verificación masiva
-}
+    function activarDispositivo(dispositivoId) {
+        window.location.href = `/admin/dispositivos/activar/${dispositivoId}`;
+    }
 
-function mostrarEstadisticas() {
-    alert('Mostrando estadísticas de dispositivos...');
-    // Implementar vista de estadísticas
-}
+    function eliminarDispositivo(dispositivoId) {
+        if (confirm('¿Estás seguro de que quieres eliminar este dispositivo? Esta acción no se puede deshacer.')) {
+            window.location.href = `/admin/dispositivos/eliminar/${dispositivoId}`;
+        }
+    }
+
+    function verificarConectividad() {
+        alert('Verificando conectividad de todos los dispositivos...');
+        // Implementar verificación masiva
+    }
+
+    function mostrarEstadisticas() {
+        alert('Mostrando estadísticas de dispositivos...');
+        // Implementar vista de estadísticas
+    }
 </script>
 
 <style>
-.device-info strong {
-    color: #2c3e50;
-}
+    .device-info strong {
+        color: #2c3e50;
+    }
 
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-}
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
 
-.stat-card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    text-align: center;
-}
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
 
-.stat-card.success { border-left: 4px solid #28a745; }
-.stat-card.info { border-left: 4px solid #17a2b8; }
-.stat-card.warning { border-left: 4px solid #ffc107; }
+    .stat-card.success {
+        border-left: 4px solid #28a745;
+    }
 
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #2c3e50;
-}
+    .stat-card.info {
+        border-left: 4px solid #17a2b8;
+    }
 
-.stat-label {
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-}
+    .stat-card.warning {
+        border-left: 4px solid #ffc107;
+    }
 
-.badge-success { background-color: #28a745; }
-.badge-danger { background-color: #dc3545; }
-.badge-info { background-color: #17a2b8; }
-.badge-secondary { background-color: #6c757d; }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2c3e50;
+    }
 
-.actions-bar {
-    margin-bottom: 1rem;
-}
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
 
-.btn-group-sm .btn {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-}
+    .badge-success {
+        background-color: #28a745;
+    }
+
+    .badge-danger {
+        background-color: #dc3545;
+    }
+
+    .badge-info {
+        background-color: #17a2b8;
+    }
+
+    .badge-secondary {
+        background-color: #6c757d;
+    }
+
+    .actions-bar {
+        margin-bottom: 1rem;
+    }
+
+    .btn-group-sm .btn {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
 </style>
 
 <?php
 // Helper function for time elapsed
 if (!function_exists('tiempoTranscurrido')) {
-    function tiempoTranscurrido($datetime) {
+    function tiempoTranscurrido($datetime)
+    {
         $time = time() - strtotime($datetime);
-        
+
         if ($time < 60) return 'Hace ' . $time . ' seg';
-        if ($time < 3600) return 'Hace ' . floor($time/60) . ' min';
-        if ($time < 86400) return 'Hace ' . floor($time/3600) . ' h';
-        return 'Hace ' . floor($time/86400) . ' días';
+        if ($time < 3600) return 'Hace ' . floor($time / 60) . ' min';
+        if ($time < 86400) return 'Hace ' . floor($time / 3600) . ' h';
+        return 'Hace ' . floor($time / 86400) . ' días';
     }
 }
 ?>

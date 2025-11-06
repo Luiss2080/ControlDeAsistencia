@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dashboard de Recursos Humanos
  * Sistema de Control de Asistencia
@@ -7,15 +8,15 @@
 
 <!-- Alertas en tiempo real -->
 <?php if (!empty($alertas)): ?>
-<div class="alertas-tiempo-real mb-4">
-    <?php foreach ($alertas as $alerta): ?>
-        <div class="alert alert-<?= $alerta['tipo'] ?> alert-dismissible fade show" role="alert">
-            <i class="fas fa-<?= $alerta['icono'] ?>"></i>
-            <strong><?= $alerta['titulo'] ?></strong> <?= $alerta['mensaje'] ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endforeach; ?>
-</div>
+    <div class="alertas-tiempo-real mb-4">
+        <?php foreach ($alertas as $alerta): ?>
+            <div class="alert alert-<?= $alerta['tipo'] ?> alert-dismissible fade show" role="alert">
+                <i class="fas fa-<?= $alerta['icono'] ?>"></i>
+                <strong><?= $alerta['titulo'] ?></strong> <?= $alerta['mensaje'] ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endforeach; ?>
+    </div>
 <?php endif; ?>
 
 <div class="stats-grid" id="stats-container">
@@ -66,7 +67,7 @@
 <!-- Indicador de última actualización -->
 <div class="update-indicator mb-3">
     <small class="text-muted">
-        <i class="fas fa-clock"></i> Última actualización: 
+        <i class="fas fa-clock"></i> Última actualización:
         <span id="last-update"><?= date('H:i:s') ?></span>
         <button class="btn btn-link btn-sm p-0 ms-2" onclick="actualizarDashboard()" id="btn-actualizar">
             <i class="fas fa-sync-alt"></i> Actualizar ahora
@@ -422,47 +423,47 @@
 
     function actualizarDashboard() {
         if (actualizacionEnCurso) return;
-        
+
         actualizacionEnCurso = true;
         const btnActualizar = document.getElementById('btn-actualizar');
         const iconoOriginal = btnActualizar.innerHTML;
-        
+
         btnActualizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
         btnActualizar.disabled = true;
 
         fetch('/rrhh/api/estadisticas-tiempo-real', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                actualizarEstadisticas(data.estadisticas);
-                actualizarAlertas(data.alertas);
-                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
-                
-                // Mostrar notificación si hay nuevas alertas críticas
-                if (data.alertas && data.alertas.length > 0) {
-                    data.alertas.forEach(alerta => {
-                        if (alerta.critica) {
-                            mostrarNotificacionTiempoReal(alerta);
-                        }
-                    });
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error actualizando dashboard:', error);
-            mostrarAlerta('Error al actualizar los datos. Inténtalo de nuevo.', 'error');
-        })
-        .finally(() => {
-            actualizacionEnCurso = false;
-            btnActualizar.innerHTML = iconoOriginal;
-            btnActualizar.disabled = false;
-        });
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    actualizarEstadisticas(data.estadisticas);
+                    actualizarAlertas(data.alertas);
+                    document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+
+                    // Mostrar notificación si hay nuevas alertas críticas
+                    if (data.alertas && data.alertas.length > 0) {
+                        data.alertas.forEach(alerta => {
+                            if (alerta.critica) {
+                                mostrarNotificacionTiempoReal(alerta);
+                            }
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error actualizando dashboard:', error);
+                mostrarAlerta('Error al actualizar los datos. Inténtalo de nuevo.', 'error');
+            })
+            .finally(() => {
+                actualizacionEnCurso = false;
+                btnActualizar.innerHTML = iconoOriginal;
+                btnActualizar.disabled = false;
+            });
     }
 
     function actualizarEstadisticas(estadisticas) {
@@ -480,11 +481,11 @@
     function animarNumero(elementId, nuevoValor) {
         const elemento = document.querySelector(`#${elementId} .stat-number`);
         const valorActual = parseInt(elemento.textContent) || 0;
-        
+
         if (valorActual !== nuevoValor) {
             elemento.style.transform = 'scale(1.1)';
             elemento.style.transition = 'transform 0.3s ease';
-            
+
             setTimeout(() => {
                 elemento.textContent = nuevoValor;
                 elemento.style.transform = 'scale(1)';
@@ -559,7 +560,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         solicitarPermisosNotificacion();
         iniciarActualizacionesAutomaticas();
-        
+
         // Detener actualizaciones cuando la página se oculta
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) {
