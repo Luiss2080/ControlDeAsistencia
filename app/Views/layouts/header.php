@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Componente Header del Sistema
  * Sistema de Control de Asistencia

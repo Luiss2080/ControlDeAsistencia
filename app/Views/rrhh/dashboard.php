@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dashboard de Recursos Humanos
  * Sistema de Control de Asistencia
@@ -71,7 +72,7 @@
                                 <?php
                                 $estado_clase = '';
                                 $estado_texto = $asistencia['estado'];
-                                
+
                                 switch ($asistencia['estado']) {
                                     case 'puntual':
                                         $estado_clase = 'success';
@@ -126,7 +127,7 @@
                     Selecciona el rango de fechas y formato para generar reportes personalizados
                 </p>
             </div>
-            
+
             <form id="form-reporte" class="form-inline">
                 <div class="form-grid">
                     <div class="form-group form-group-no-margin">
@@ -152,7 +153,7 @@
                     </div>
                 </div>
             </form>
-            
+
             <div class="grid-3-cols">
                 <div class="card">
                     <div class="card-header">
@@ -175,7 +176,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="card">
                     <div class="card-header">
                         <h6><i class="fas fa-chart-pie"></i> Estadísticas del Mes</h6>
@@ -269,7 +270,7 @@
                                 $puntuales = $dia['puntuales'];
                                 $tardanzas = $dia['tardanzas'];
                                 $porcentaje = $total > 0 ? round(($puntuales / $total) * 100, 1) : 0;
-                                
+
                                 $porcentaje_clase = '';
                                 if ($porcentaje >= 90) $porcentaje_clase = 'success';
                                 elseif ($porcentaje >= 70) $porcentaje_clase = 'warning';
@@ -294,7 +295,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <?php if (!empty($reporte_semanal)): ?>
                 <div class="summary-card">
                     <h6 class="summary-title"><i class="fas fa-chart-line"></i> Resumen Semanal</h6>
@@ -308,108 +309,108 @@
 </div>
 
 <script>
-// Generar reporte desde formulario
-document.getElementById("form-reporte").addEventListener("submit", function(e) {
-    e.preventDefault();
-    
-    const fechaInicio = document.getElementById("fecha_inicio").value;
-    const fechaFin = document.getElementById("fecha_fin").value;
-    const formato = document.getElementById("formato").value;
-    
-    const url = `/rrhh/reporte?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&formato=${formato}`;
-    
-    if (formato === "csv") {
-        // Descargar archivo
-        window.location.href = url;
-    } else {
-        // Abrir en nueva pestaña
+    // Generar reporte desde formulario
+    document.getElementById("form-reporte").addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const fechaInicio = document.getElementById("fecha_inicio").value;
+        const fechaFin = document.getElementById("fecha_fin").value;
+        const formato = document.getElementById("formato").value;
+
+        const url = `/rrhh/reporte?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&formato=${formato}`;
+
+        if (formato === "csv") {
+            // Descargar archivo
+            window.location.href = url;
+        } else {
+            // Abrir en nueva pestaña
+            window.open(url, "_blank");
+        }
+    });
+
+    // Reportes rápidos
+    function generarReporteRapido(tipo) {
+        let fechaInicio, fechaFin;
+        const hoy = new Date();
+
+        switch (tipo) {
+            case "hoy":
+                fechaInicio = fechaFin = hoy.toISOString().split("T")[0];
+                break;
+            case "semana":
+                const inicioSemana = new Date(hoy.setDate(hoy.getDate() - hoy.getDay()));
+                fechaInicio = inicioSemana.toISOString().split("T")[0];
+                fechaFin = new Date().toISOString().split("T")[0];
+                break;
+            case "mes":
+                fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split("T")[0];
+                fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split("T")[0];
+                break;
+            case "tardanzas":
+                fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split("T")[0];
+                fechaFin = new Date().toISOString().split("T")[0];
+                break;
+        }
+
+        const url = `/rrhh/reporte?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&formato=html${tipo === "tardanzas" ? "&solo_tardanzas=1" : ""}`;
         window.open(url, "_blank");
     }
-});
 
-// Reportes rápidos
-function generarReporteRapido(tipo) {
-    let fechaInicio, fechaFin;
-    const hoy = new Date();
-    
-    switch(tipo) {
-        case "hoy":
-            fechaInicio = fechaFin = hoy.toISOString().split("T")[0];
-            break;
-        case "semana":
-            const inicioSemana = new Date(hoy.setDate(hoy.getDate() - hoy.getDay()));
-            fechaInicio = inicioSemana.toISOString().split("T")[0];
-            fechaFin = new Date().toISOString().split("T")[0];
-            break;
-        case "mes":
-            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split("T")[0];
-            fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).toISOString().split("T")[0];
-            break;
-        case "tardanzas":
-            fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split("T")[0];
-            fechaFin = new Date().toISOString().split("T")[0];
-            break;
+    // Exportar asistencias de hoy
+    function exportarAsistenciasHoy() {
+        const hoy = new Date().toISOString().split("T")[0];
+        window.location.href = `/rrhh/reporte?fecha_inicio=${hoy}&fecha_fin=${hoy}&formato=csv`;
     }
-    
-    const url = `/rrhh/reporte?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}&formato=html${tipo === "tardanzas" ? "&solo_tardanzas=1" : ""}`;
-    window.open(url, "_blank");
-}
 
-// Exportar asistencias de hoy
-function exportarAsistenciasHoy() {
-    const hoy = new Date().toISOString().split("T")[0];
-    window.location.href = `/rrhh/reporte?fecha_inicio=${hoy}&fecha_fin=${hoy}&formato=csv`;
-}
-
-// Ver detalle de empleado
-function verDetalleEmpleado(email) {
-    mostrarAlerta("Ver detalle del empleado: " + email + "\n\nEsta función abrirá el perfil completo del empleado con su historial de asistencias.", 'info');
-}
-
-// Inicializar DataTables cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        // Tabla de asistencias de hoy
-        $('#tabla-asistencias-hoy').DataTable({
-            "pageLength": 10,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-            }
-        });
-        
-        // Tabla de empleados con tardanzas
-        $('#tabla-tardanzas').DataTable({
-            "pageLength": 10,
-            "lengthChange": false,
-            "searching": true,
-            "ordering": true,
-            "info": false,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-            }
-        });
-        
-        // Tabla de reporte semanal
-        $('#tabla-semanal').DataTable({
-            "pageLength": 10,
-            "lengthChange": false,
-            "searching": false,
-            "ordering": false,
-            "info": false,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-            }
-        });
+    // Ver detalle de empleado
+    function verDetalleEmpleado(email) {
+        mostrarAlerta("Ver detalle del empleado: " + email + "\n\nEsta función abrirá el perfil completo del empleado con su historial de asistencias.", 'info');
     }
-});
+
+    // Inicializar DataTables cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $ !== 'undefined' && $.fn.DataTable) {
+            // Tabla de asistencias de hoy
+            $('#tabla-asistencias-hoy').DataTable({
+                "pageLength": 10,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                }
+            });
+
+            // Tabla de empleados con tardanzas
+            $('#tabla-tardanzas').DataTable({
+                "pageLength": 10,
+                "lengthChange": false,
+                "searching": true,
+                "ordering": true,
+                "info": false,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                }
+            });
+
+            // Tabla de reporte semanal
+            $('#tabla-semanal').DataTable({
+                "pageLength": 10,
+                "lengthChange": false,
+                "searching": false,
+                "ordering": false,
+                "info": false,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                }
+            });
+        }
+    });
 </script>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dashboard del Empleado
  * Sistema de Control de Asistencia
@@ -9,13 +10,13 @@
 <div class="welcome-header">
     <h2 class="welcome-title"><i class="fas fa-hand-wave"></i> ¡Hola, <?php echo htmlspecialchars($empleado['nombres'] . ' ' . $empleado['apellidos']); ?>!</h2>
     <div class="welcome-date"><i class="fas fa-calendar-day"></i> <?php echo date('l, d \d\e F \d\e Y'); ?></div>
-    
+
     <?php if ($asistencia_hoy): ?>
         <?php
         $estado_emoji = '';
         $estado_texto = '';
         $estado_color = '';
-        
+
         switch ($asistencia_hoy['estado']) {
             case 'puntual':
                 $estado_emoji = '<i class="fas fa-check-circle"></i>';
@@ -78,7 +79,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card">
         <div class="card-header">
             <h6><i class="fas fa-id-card"></i> Mi Tarjeta RFID</h6>
@@ -143,7 +144,7 @@
                                 <?php
                                 $estado_clase = '';
                                 $estado_texto = '';
-                                
+
                                 switch ($asistencia['estado']) {
                                     case 'puntual':
                                         $estado_clase = 'success';
@@ -218,7 +219,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Comparación con horario -->
                 <div class="card">
                     <div class="card-header">
@@ -237,7 +238,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Logros y racha -->
                 <div class="card">
                     <div class="card-header">
@@ -246,7 +247,7 @@
                     <div class="card-body text-center">
                         <?php
                         $racha = $stats['racha_puntual'] ?? 0;
-                        
+
                         if ($racha >= 10) {
                             echo '<div class="status-icon"><i class="fas fa-fire text-danger"></i></div>';
                             echo '<p class="text-danger font-weight-bold">¡Racha increíble!</p>';
@@ -288,19 +289,20 @@
 </div>
 
 <script>
-// Actualizar página cada 5 minutos para mostrar cambios en tiempo real
-setTimeout(function() {
-    location.reload();
-}, 300000); // 5 minutos
-
-// Mostrar notificación si aún no ha marcado asistencia hoy
-document.addEventListener("DOMContentLoaded", function() {
-    <?php if (!$asistencia_hoy && date('H') >= 8): // Si son las 8 AM o más y no ha marcado ?>
+    // Actualizar página cada 5 minutos para mostrar cambios en tiempo real
     setTimeout(function() {
-        if (confirm("⚠️ Recordatorio: Aún no has marcado asistencia hoy.\n\n¿Te gustaría ver información sobre cómo marcar asistencia?")) {
-            mostrarAlerta("📱 Para marcar asistencia:\n\n1. Busca el lector RFID en tu oficina\n2. Acerca tu tarjeta al lector\n3. Espera el pitido de confirmación\n\n¡Tu asistencia se registrará automáticamente!", 'info');
-        }
-    }, 3000);
-    <?php endif; ?>
-});
+        location.reload();
+    }, 300000); // 5 minutos
+
+    // Mostrar notificación si aún no ha marcado asistencia hoy
+    document.addEventListener("DOMContentLoaded", function() {
+        <?php if (!$asistencia_hoy && date('H') >= 8): // Si son las 8 AM o más y no ha marcado 
+        ?>
+            setTimeout(function() {
+                if (confirm("⚠️ Recordatorio: Aún no has marcado asistencia hoy.\n\n¿Te gustaría ver información sobre cómo marcar asistencia?")) {
+                    mostrarAlerta("📱 Para marcar asistencia:\n\n1. Busca el lector RFID en tu oficina\n2. Acerca tu tarjeta al lector\n3. Espera el pitido de confirmación\n\n¡Tu asistencia se registrará automáticamente!", 'info');
+                }
+            }, 3000);
+        <?php endif; ?>
+    });
 </script>

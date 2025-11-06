@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Componente Footer del Sistema
  * Sistema de Control de Asistencia

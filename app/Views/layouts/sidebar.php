@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Componente Sidebar del Sistema
  * Sistema de Control de Asistencia
@@ -20,7 +21,7 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
             <i class="fas fa-chevron-left"></i>
         </button>
     </div>
-    
+
     <ul class="sidebar-menu">
         <!-- Menú común para todos los roles -->
         <li>
@@ -29,7 +30,7 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
                 <span>Dashboard</span>
             </a>
         </li>
-        
+
         <?php if ($rol === 'admin'): ?>
             <!-- Menú específico para Administradores -->
             <li>
@@ -68,7 +69,7 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
                     <span>Logs del Sistema</span>
                 </a>
             </li>
-            
+
         <?php elseif ($rol === 'rrhh'): ?>
             <!-- Menú específico para RRHH -->
             <li>
@@ -101,7 +102,7 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
                     <span>Permisos y Ausencias</span>
                 </a>
             </li>
-            
+
         <?php else: ?>
             <!-- Menú específico para Empleados -->
             <li>
@@ -129,7 +130,7 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
                 </a>
             </li>
         <?php endif; ?>
-        
+
         <!-- Opciones comunes para todos los roles -->
         <li>
             <a href="/ayuda" class="<?php echo (strpos($paginaActual, '/ayuda') !== false) ? 'active' : ''; ?>">
@@ -137,14 +138,14 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
                 <span>Ayuda</span>
             </a>
         </li>
-        
+
         <?php if ($rol === 'admin' || $rol === 'rrhh'): ?>
-        <li>
-            <a href="/soporte" class="<?php echo (strpos($paginaActual, '/soporte') !== false) ? 'active' : ''; ?>">
-                <i class="fas fa-life-ring"></i>
-                <span>Soporte Técnico</span>
-            </a>
-        </li>
+            <li>
+                <a href="/soporte" class="<?php echo (strpos($paginaActual, '/soporte') !== false) ? 'active' : ''; ?>">
+                    <i class="fas fa-life-ring"></i>
+                    <span>Soporte Técnico</span>
+                </a>
+            </li>
         <?php endif; ?>
     </ul>
 </aside>

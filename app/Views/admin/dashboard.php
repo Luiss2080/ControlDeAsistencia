@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Dashboard del Administrador
  * Sistema de Control de Asistencia
@@ -269,41 +270,41 @@
 </div>
 
 <script>
-// Auto-refresh cada 30 segundos
-setTimeout(function() {
-    location.reload();
-}, 30000);
+    // Auto-refresh cada 30 segundos
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
 
-// Función para generar backup
-function generarBackup() {
-    if (confirm('¿Estás seguro de generar un backup? Este proceso puede tomar varios minutos.')) {
-        Sistema.mostrarLoading('.modal-content');
-        
-        // Simular proceso de backup
-        setTimeout(() => {
-            Sistema.ocultarLoading();
-            mostrarAlerta('Backup generado exitosamente', 'success');
-            cerrarModal('modal-backup');
-        }, 3000);
-    }
-}
+    // Función para generar backup
+    function generarBackup() {
+        if (confirm('¿Estás seguro de generar un backup? Este proceso puede tomar varios minutos.')) {
+            Sistema.mostrarLoading('.modal-content');
 
-// Inicializar DataTable cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    // Solo inicializar si jQuery y DataTables están disponibles
-    if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        $('#dispositivos-table').DataTable({
-            "pageLength": 10,
-            "lengthChange": true,
-            "searching": true,
-            "ordering": true,
-            "info": true,
-            "autoWidth": false,
-            "responsive": true,
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
-            }
-        });
+            // Simular proceso de backup
+            setTimeout(() => {
+                Sistema.ocultarLoading();
+                mostrarAlerta('Backup generado exitosamente', 'success');
+                cerrarModal('modal-backup');
+            }, 3000);
+        }
     }
-});
+
+    // Inicializar DataTable cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+        // Solo inicializar si jQuery y DataTables están disponibles
+        if (typeof $ !== 'undefined' && $.fn.DataTable) {
+            $('#dispositivos-table').DataTable({
+                "pageLength": 10,
+                "lengthChange": true,
+                "searching": true,
+                "ordering": true,
+                "info": true,
+                "autoWidth": false,
+                "responsive": true,
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Spanish.json"
+                }
+            });
+        }
+    });
 </script>

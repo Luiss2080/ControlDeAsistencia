@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Controlador de RRHH
  * Sistema de Control de Asistencia
@@ -9,15 +10,17 @@ namespace App\Controllers;
 use App\Models\Database;
 use Exception;
 
-class RRHHController {
+class RRHHController
+{
     private $db;
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->db = Database::getInstance();
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        
+
         // Verificar autenticación y rol de RRHH
         if (!isset($_SESSION['usuario_id']) || $_SESSION['usuario_rol'] !== 'rrhh') {
             header('Location: /ControlDeAsistencia/?error=' . urlencode('Acceso denegado'));
@@ -28,19 +31,20 @@ class RRHHController {
     /**
      * Dashboard de RRHH
      */
-    public function dashboard() {
+    public function dashboard()
+    {
         // Obtener estadísticas del día
         $estadisticas = $this->obtenerEstadisticasHoy();
-        
+
         // Obtener asistencias del día
         $asistencias_hoy = $this->obtenerAsistenciasHoy();
-        
+
         // Obtener alertas y tardanzas
         $alertas = $this->obtenerAlertas();
-        
+
         // Obtener usuario logueado
         $usuario = $this->obtenerUsuarioLogueado();
-        
+
         $this->renderViewWithLayout('rrhh/dashboard', [
             'usuario' => $usuario,
             'titulo' => 'Panel de RRHH',
@@ -54,30 +58,32 @@ class RRHHController {
     /**
      * Generar reporte de asistencia
      */
-    public function reporte() {
+    public function reporte()
+    {
         $filtros = [
             'fecha_inicio' => $_GET['fecha_inicio'] ?? date('Y-m-01'),
             'fecha_fin' => $_GET['fecha_fin'] ?? date('Y-m-d'),
             'empleado' => $_GET['empleado'] ?? '',
             'tipo_reporte' => $_GET['tipo_reporte'] ?? 'diario'
         ];
-        
+
         $datos_reporte = $this->generarReporte($filtros);
         $empleados = $this->db->fetchAll("SELECT id, nombres, apellidos, numero_empleado FROM usuarios WHERE activo = 1 AND rol = 'empleado' ORDER BY apellidos, nombres");
-        
+
         include __DIR__ . '/../Views/rrhh/reportes.php';
     }
 
     /**
      * Ver detalle de empleado específico
      */
-    public function verEmpleado($id = null) {
+    public function verEmpleado($id = null)
+    {
         if (!$id) {
             $_SESSION['error'] = 'ID de empleado no válido';
             header('Location: /ControlDeAsistencia/rrhh');
             exit;
         }
-        
+
         // Obtener información del empleado
         $empleado = $this->db->fetch("SELECT * FROM usuarios WHERE id = ? AND activo = 1", [$id]);
         if (!$empleado) {
@@ -85,7 +91,7 @@ class RRHHController {
             header('Location: /ControlDeAsistencia/rrhh');
             exit;
         }
-        
+
         // Obtener asistencias del mes actual
         $asistencias_mes = $this->db->fetchAll("
             SELECT a.*, d.nombre as dispositivo_nombre
@@ -96,26 +102,27 @@ class RRHHController {
             AND YEAR(a.fecha_hora) = YEAR(CURDATE())
             ORDER BY a.fecha_hora DESC
         ", [$id]);
-        
+
         // Calcular estadísticas del empleado
         $estadisticas_empleado = $this->calcularEstadisticasEmpleado($id);
-        
+
         include __DIR__ . '/../Views/rrhh/detalle_empleado.php';
     }
 
     /**
      * Exportar reporte a Excel/PDF
      */
-    public function exportarReporte() {
+    public function exportarReporte()
+    {
         $filtros = [
             'fecha_inicio' => $_POST['fecha_inicio'] ?? date('Y-m-01'),
             'fecha_fin' => $_POST['fecha_fin'] ?? date('Y-m-d'),
             'empleado' => $_POST['empleado'] ?? '',
             'formato' => $_POST['formato'] ?? 'excel'
         ];
-        
+
         $datos_reporte = $this->generarReporte($filtros);
-        
+
         if ($filtros['formato'] === 'excel') {
             $this->exportarExcel($datos_reporte, $filtros);
         } else {
@@ -126,33 +133,35 @@ class RRHHController {
     /**
      * Métodos auxiliares privados
      */
-    private function obtenerEstadisticasHoy() {
+    private function obtenerEstadisticasHoy()
+    {
         $stats = [];
-        
+
         // Total de empleados activos
         $stats['empleados_total'] = $this->db->fetch("SELECT COUNT(*) as total FROM usuarios WHERE activo = 1 AND rol = 'empleado'")['total'];
-        
+
         // Empleados presentes hoy (que han marcado entrada)
         $stats['presentes_hoy'] = $this->db->fetch("
             SELECT COUNT(DISTINCT usuario_id) as total 
             FROM asistencias 
             WHERE DATE(fecha_hora) = CURDATE() AND tipo = 'entrada'
         ")['total'];
-        
+
         // Tardanzas de hoy
         $stats['tardanzas_hoy'] = $this->db->fetch("
             SELECT COUNT(*) as total 
             FROM asistencias 
             WHERE DATE(fecha_hora) = CURDATE() AND es_tardanza = 1
         ")['total'];
-        
+
         // Ausentes (empleados que no han marcado entrada hoy)
         $stats['ausentes_hoy'] = $stats['empleados_total'] - $stats['presentes_hoy'];
-        
+
         return $stats;
     }
-    
-    private function obtenerAsistenciasHoy() {
+
+    private function obtenerAsistenciasHoy()
+    {
         return $this->db->fetchAll("
             SELECT 
                 a.*,
@@ -167,10 +176,11 @@ class RRHHController {
             ORDER BY a.fecha_hora DESC
         ");
     }
-    
-    private function obtenerAlertas() {
+
+    private function obtenerAlertas()
+    {
         $alertas = [];
-        
+
         // Empleados con múltiples tardanzas esta semana
         $tardanzas_semana = $this->db->fetchAll("
             SELECT 
@@ -187,14 +197,14 @@ class RRHHController {
             HAVING total_tardanzas >= 3
             ORDER BY total_tardanzas DESC
         ");
-        
+
         foreach ($tardanzas_semana as $tardanza) {
             $alertas[] = [
                 'tipo' => 'warning',
                 'mensaje' => "Empleado {$tardanza['nombres']} {$tardanza['apellidos']} ({$tardanza['numero_empleado']}) tiene {$tardanza['total_tardanzas']} tardanzas esta semana"
             ];
         }
-        
+
         // Empleados ausentes hoy
         $ausentes_hoy = $this->db->fetchAll("
             SELECT u.nombres, u.apellidos, u.numero_empleado
@@ -203,18 +213,19 @@ class RRHHController {
             WHERE u.activo = 1 AND u.rol = 'empleado' AND a.id IS NULL
             ORDER BY u.apellidos, u.nombres
         ");
-        
+
         if (count($ausentes_hoy) > 0) {
             $alertas[] = [
                 'tipo' => 'info',
                 'mensaje' => count($ausentes_hoy) . " empleado(s) ausente(s) hoy"
             ];
         }
-        
+
         return $alertas;
     }
-    
-    private function generarReporte($filtros) {
+
+    private function generarReporte($filtros)
+    {
         $sql = "
             SELECT 
                 u.numero_empleado,
@@ -236,22 +247,23 @@ class RRHHController {
                 AND DATE(a.fecha_hora) BETWEEN ? AND ?
             WHERE u.activo = 1 AND u.rol = 'empleado'
         ";
-        
+
         $params = [$filtros['fecha_inicio'], $filtros['fecha_fin']];
-        
+
         if (!empty($filtros['empleado'])) {
             $sql .= " AND u.id = ?";
             $params[] = $filtros['empleado'];
         }
-        
+
         $sql .= " GROUP BY u.id, DATE(a.fecha_hora) ORDER BY fecha DESC, u.apellidos, u.nombres";
-        
+
         return $this->db->fetchAll($sql, $params);
     }
-    
-    private function calcularEstadisticasEmpleado($usuario_id) {
+
+    private function calcularEstadisticasEmpleado($usuario_id)
+    {
         $stats = [];
-        
+
         // Estadísticas del mes actual
         $stats['dias_trabajados'] = $this->db->fetch("
             SELECT COUNT(DISTINCT DATE(fecha_hora)) as total
@@ -261,7 +273,7 @@ class RRHHController {
             AND YEAR(fecha_hora) = YEAR(CURDATE())
             AND tipo = 'entrada'
         ", [$usuario_id])['total'];
-        
+
         $stats['tardanzas_mes'] = $this->db->fetch("
             SELECT COUNT(*) as total
             FROM asistencias 
@@ -270,17 +282,18 @@ class RRHHController {
             AND YEAR(fecha_hora) = YEAR(CURDATE())
             AND es_tardanza = 1
         ", [$usuario_id])['total'];
-        
-        $stats['puntualidad'] = $stats['dias_trabajados'] > 0 ? 
+
+        $stats['puntualidad'] = $stats['dias_trabajados'] > 0 ?
             round((($stats['dias_trabajados'] - $stats['tardanzas_mes']) / $stats['dias_trabajados']) * 100, 2) : 100;
-        
+
         return $stats;
     }
-    
-    private function exportarExcel($datos, $filtros) {
+
+    private function exportarExcel($datos, $filtros)
+    {
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment; filename="reporte_asistencia_' . date('Y-m-d') . '.xls"');
-        
+
         echo "<table border='1'>";
         echo "<tr>";
         echo "<th>Número Empleado</th>";
@@ -294,7 +307,7 @@ class RRHHController {
         echo "<th>Tardanzas</th>";
         echo "<th>Estado</th>";
         echo "</tr>";
-        
+
         foreach ($datos as $fila) {
             echo "<tr>";
             echo "<td>" . htmlspecialchars($fila['numero_empleado']) . "</td>";
@@ -309,26 +322,27 @@ class RRHHController {
             echo "<td>" . htmlspecialchars($fila['estado']) . "</td>";
             echo "</tr>";
         }
-        
+
         echo "</table>";
         exit;
     }
-    
-    private function exportarPDF($datos, $filtros) {
+
+    private function exportarPDF($datos, $filtros)
+    {
         // Implementación básica de PDF (se puede mejorar con librerías como TCPDF)
         header('Content-Type: application/pdf');
         header('Content-Disposition: attachment; filename="reporte_asistencia_' . date('Y-m-d') . '.pdf"');
-        
+
         // Por ahora, generar HTML que se puede convertir a PDF
         echo "<!DOCTYPE html><html><head><title>Reporte de Asistencia</title></head><body>";
         echo "<h1>Reporte de Asistencia</h1>";
         echo "<p>Período: " . $filtros['fecha_inicio'] . " al " . $filtros['fecha_fin'] . "</p>";
-        
+
         echo "<table border='1' style='border-collapse: collapse; width: 100%;'>";
         echo "<tr style='background-color: #f0f0f0;'>";
         echo "<th>Número Empleado</th><th>Empleado</th><th>Fecha</th><th>Estado</th>";
         echo "</tr>";
-        
+
         foreach ($datos as $fila) {
             echo "<tr>";
             echo "<td>" . htmlspecialchars($fila['numero_empleado']) . "</td>";
@@ -337,7 +351,7 @@ class RRHHController {
             echo "<td>" . htmlspecialchars($fila['estado']) . "</td>";
             echo "</tr>";
         }
-        
+
         echo "</table>";
         echo "</body></html>";
         exit;
@@ -346,15 +360,16 @@ class RRHHController {
     /**
      * Obtiene información del usuario logueado
      */
-    private function obtenerUsuarioLogueado() {
+    private function obtenerUsuarioLogueado()
+    {
         if (!isset($_SESSION['usuario_id'])) {
             return null;
         }
-        
+
         try {
             $sql = "SELECT * FROM usuarios WHERE id = ?";
             $usuario = $this->db->fetch($sql, [$_SESSION['usuario_id']]);
-            
+
             if ($usuario) {
                 return [
                     'id' => $usuario['id'],
@@ -368,24 +383,24 @@ class RRHHController {
         } catch (Exception $e) {
             error_log("Error obteniendo usuario logueado: " . $e->getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Renderiza una vista usando el layout principal
      */
-    private function renderViewWithLayout($viewPath, $data = []) {
+    private function renderViewWithLayout($viewPath, $data = [])
+    {
         // Extraer variables para que estén disponibles en las vistas
         extract($data);
-        
+
         // Capturar el contenido de la vista
         ob_start();
         include __DIR__ . '/../Views/' . $viewPath . '.php';
         $contenido = ob_get_clean();
-        
+
         // Incluir el layout principal
         include __DIR__ . '/../Views/layouts/main.php';
     }
 }
-?>
