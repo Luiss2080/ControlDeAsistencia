@@ -27,12 +27,12 @@ function inicializarSistema() {
 function inicializarSidebar() {
   const sidebarToggle = document.querySelector(".sidebar-toggle");
   const sidebar = document.querySelector(".sidebar");
-  const mainContent = document.querySelector(".main-content");
+  const contentWrapper = document.querySelector(".content-wrapper");
 
   if (sidebarToggle) {
     sidebarToggle.addEventListener("click", function () {
       sidebar.classList.toggle("collapsed");
-      mainContent.classList.toggle("collapsed");
+      contentWrapper.classList.toggle("collapsed");
 
       // En móviles, mostrar/ocultar el sidebar
       if (window.innerWidth <= 768) {

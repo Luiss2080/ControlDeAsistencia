@@ -3,10 +3,6 @@
  * Dashboard del Administrador
  * Sistema de Control de Asistencia
  */
-
-$titulo = 'Panel de Administración';
-$seccion = 'Dashboard';
-ob_start();
 ?>
 
 <div class="stats-grid">
@@ -311,8 +307,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-<?php
-$contenido = ob_get_clean();
-include __DIR__ . '/../layouts/main.php';
-?>

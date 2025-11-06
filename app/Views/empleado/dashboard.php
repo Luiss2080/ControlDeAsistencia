@@ -3,15 +3,11 @@
  * Dashboard del Empleado
  * Sistema de Control de Asistencia
  */
-
-$titulo = 'Mi Panel de Empleado';
-$seccion = 'Dashboard Personal';
-ob_start();
 ?>
 
 <!-- Estado del día -->
 <div class="welcome-header">
-    <h2 class="welcome-title"><i class="fas fa-hand-wave"></i> ¡Hola, <?php echo htmlspecialchars($usuario['nombre']); ?>!</h2>
+    <h2 class="welcome-title"><i class="fas fa-hand-wave"></i> ¡Hola, <?php echo htmlspecialchars($empleado['nombres'] . ' ' . $empleado['apellidos']); ?>!</h2>
     <div class="welcome-date"><i class="fas fa-calendar-day"></i> <?php echo date('l, d \d\e F \d\e Y'); ?></div>
     
     <?php if ($asistencia_hoy): ?>
@@ -308,8 +304,3 @@ document.addEventListener("DOMContentLoaded", function() {
     <?php endif; ?>
 });
 </script>
-
-<?php
-$contenido = ob_get_clean();
-include __DIR__ . '/../layouts/main.php';
-?>

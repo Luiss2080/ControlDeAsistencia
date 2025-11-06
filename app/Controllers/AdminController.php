@@ -7,6 +7,7 @@
 namespace App\Controllers;
 
 use App\Models\Database;
+use Exception;
 
 class AdminController {
     private $db;
@@ -63,7 +64,18 @@ class AdminController {
             // Obtener actividad reciente
             $actividad_reciente = $this->obtenerActividadReciente();
             
-            include __DIR__ . '/../Views/admin/dashboard.php';
+            // Obtener información del usuario logueado
+            $usuario = $this->obtenerUsuarioLogueado();
+            
+            // Renderizar vista con layout
+            $this->renderViewWithLayout('admin/dashboard', [
+                'usuario' => $usuario,
+                'titulo' => 'Panel de Administración',
+                'seccion' => 'Dashboard',
+                'stats' => $stats,
+                'dispositivos_activos' => $dispositivos_activos,
+                'actividad_reciente' => $actividad_reciente
+            ]);
             
         } catch (Exception $e) {
             error_log("Error en dashboard admin: " . $e->getMessage());
@@ -90,7 +102,16 @@ class AdminController {
                 $usuarios = [];
             }
             
-            include __DIR__ . '/../Views/admin/usuarios.php';
+            // Obtener usuario logueado
+            $usuario = $this->obtenerUsuarioLogueado();
+            
+            $this->renderViewWithLayout('admin/usuarios', [
+                'usuario' => $usuario,
+                'titulo' => 'Gestión de Usuarios',
+                'seccion' => 'Usuarios',
+                'usuarios' => $usuarios,
+                'filtros' => $filtros
+            ]);
             
         } catch (Exception $e) {
             error_log("Error en usuarios admin: " . $e->getMessage());
@@ -159,7 +180,15 @@ class AdminController {
                 ORDER BY d.nombre
             ");
             
-            include __DIR__ . '/../Views/admin/dispositivos.php';
+            // Obtener usuario logueado
+            $usuario = $this->obtenerUsuarioLogueado();
+            
+            $this->renderViewWithLayout('admin/dispositivos', [
+                'usuario' => $usuario,
+                'titulo' => 'Gestión de Dispositivos',
+                'seccion' => 'Dispositivos',
+                'dispositivos' => $dispositivos
+            ]);
             
         } catch (Exception $e) {
             error_log("Error en dispositivos admin: " . $e->getMessage());
@@ -516,6 +545,51 @@ class AdminController {
         $sql .= " GROUP BY u.id, DATE(a.fecha_hora) ORDER BY u.apellidos, u.nombres, fecha DESC";
         
         return $this->db->fetchAll($sql, $params);
+    }
+    
+    /**
+     * Obtiene información del usuario logueado
+     */
+    private function obtenerUsuarioLogueado() {
+        if (!isset($_SESSION['usuario_id'])) {
+            return null;
+        }
+        
+        try {
+            $sql = "SELECT * FROM usuarios WHERE id = ?";
+            $usuario = $this->db->fetch($sql, [$_SESSION['usuario_id']]);
+            
+            if ($usuario) {
+                return [
+                    'id' => $usuario['id'],
+                    'numero_empleado' => $usuario['numero_empleado'],
+                    'nombre' => $usuario['nombres'] . ' ' . $usuario['apellidos'],
+                    'email' => $usuario['email'],
+                    'rol' => $usuario['rol'],
+                    'activo' => $usuario['activo']
+                ];
+            }
+        } catch (\Exception $e) {
+            error_log("Error obteniendo usuario logueado: " . $e->getMessage());
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Renderiza una vista usando el layout principal
+     */
+    private function renderViewWithLayout($viewPath, $data = []) {
+        // Extraer variables para que estén disponibles en las vistas
+        extract($data);
+        
+        // Capturar el contenido de la vista
+        ob_start();
+        include __DIR__ . '/../Views/' . $viewPath . '.php';
+        $contenido = ob_get_clean();
+        
+        // Incluir el layout principal
+        include __DIR__ . '/../Views/layouts/main.php';
     }
 }
 ?>

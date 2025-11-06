@@ -16,21 +16,46 @@ body {
   background-color: #f5f5f5;
   color: #333;
   line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Layout Container */
+.layout-container {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Content Wrapper */
+.content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 250px !important;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+  position: relative;
+  width: calc(100% - 250px) !important;
 }
 
 /* Header Styles */
 .header {
-  background-color: #2c3e50;
-  color: white;
+  background-color: #fff;
+  color: #333;
   padding: 15px 0;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #e9ecef;
   position: sticky;
   top: 0;
-  z-index: 1000;
+  width: 100%;
+  z-index: 100;
+  backdrop-filter: blur(10px);
 }
 
 .header-content {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -38,16 +63,10 @@ body {
   padding: 0 20px;
 }
 
-.logo {
+.header-breadcrumb span {
   font-size: 20px;
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.logo i {
-  font-size: 24px;
+  color: #2c3e50;
 }
 
 .user-info {
@@ -84,19 +103,58 @@ body {
 
 /* Sidebar Styles */
 .sidebar {
-  background-color: #34495e;
+  background-color: #2c3e50;
   width: 250px;
-  height: calc(100vh - 70px);
+  height: 100vh;
   position: fixed;
   left: 0;
-  top: 70px;
+  top: 0;
   overflow-y: auto;
   transition: all 0.3s ease;
-  z-index: 999;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  background-color: #34495e;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #2c3e50;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+}
+
+.sidebar-logo i {
+  font-size: 28px;
+  color: #3498db;
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .sidebar.collapsed {
   width: 60px;
+}
+
+.sidebar.collapsed .sidebar-title {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-toggle i {
+  transform: rotate(180deg);
 }
 
 .sidebar-menu {
@@ -141,25 +199,36 @@ body {
 }
 
 .sidebar-toggle {
-  display: none;
   background: none;
   border: none;
   color: white;
-  font-size: 18px;
+  font-size: 16px;
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-toggle i {
+  transition: transform 0.3s ease;
 }
 
 /* Main Content Area */
 .main-content {
-  margin-left: 250px;
+  flex: 1;
   padding: 20px;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 140px);
   transition: margin-left 0.3s ease;
+  overflow-y: auto;
 }
 
-.main-content.collapsed {
-  margin-left: 60px;
+.content-wrapper.collapsed {
+  margin-left: 60px !important;
+  width: calc(100% - 60px) !important;
 }
 
 .container {
@@ -169,11 +238,13 @@ body {
 
 /* Breadcrumb */
 .breadcrumb {
-  background-color: white;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  box-shadow: none;
+  border: 1px solid #e9ecef;
+  font-size: 14px;
 }
 
 /* Content Area */
@@ -561,9 +632,27 @@ body {
 .footer {
   background-color: #2c3e50;
   color: white;
-  padding: 20px 0;
-  text-align: center;
-  margin-top: 50px;
+  padding: 12px 0;
+  margin-top: auto;
+  border-top: 1px solid #34495e;
+}
+
+.footer-content {
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 5px;
+    text-align: center;
+  }
 }
 
 /* Responsive Design */
@@ -577,16 +666,12 @@ body {
     transform: translateX(0);
   }
 
-  .main-content {
+  .content-wrapper {
     margin-left: 0;
   }
 
-  .main-content.collapsed {
+  .content-wrapper.collapsed {
     margin-left: 0;
-  }
-
-  .sidebar-toggle {
-    display: block;
   }
 
   .stats-grid {

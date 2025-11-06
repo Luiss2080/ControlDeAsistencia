@@ -3,27 +3,23 @@
  * Dashboard de Recursos Humanos
  * Sistema de Control de Asistencia
  */
-
-$titulo = 'Panel de Recursos Humanos';
-$seccion = 'Dashboard RRHH';
-ob_start();
 ?>
 
 <div class="stats-grid">
     <div class="stat-card success">
-        <div class="stat-number"><?php echo ($stats['total_empleados'] ?? 0); ?></div>
+        <div class="stat-number"><?php echo ($estadisticas['total_empleados'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-users"></i> Total Empleados</div>
     </div>
     <div class="stat-card">
-        <div class="stat-number"><?php echo ($stats['presentes_hoy'] ?? 0); ?></div>
+        <div class="stat-number"><?php echo ($estadisticas['presentes_hoy'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-user-check"></i> Presentes Hoy</div>
     </div>
     <div class="stat-card warning">
-        <div class="stat-number"><?php echo ($stats['tardanzas_hoy'] ?? 0); ?></div>
+        <div class="stat-number"><?php echo ($estadisticas['tardanzas_hoy'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-clock"></i> Tardanzas Hoy</div>
     </div>
     <div class="stat-card danger">
-        <div class="stat-number"><?php echo ($stats['ausentes_hoy'] ?? 0); ?></div>
+        <div class="stat-number"><?php echo ($estadisticas['ausentes_hoy'] ?? 0); ?></div>
         <div class="stat-label"><i class="fas fa-user-times"></i> Ausentes Hoy</div>
     </div>
 </div>
@@ -186,8 +182,8 @@ ob_start();
                     </div>
                     <div class="card-body">
                         <div class="info-line">
-                            <p><strong><i class="fas fa-exclamation-triangle"></i> Total Tardanzas:</strong> <?php echo ($stats['tardanzas_mes'] ?? 0); ?></p>
-                            <p><strong><i class="fas fa-chart-line"></i> Promedio Diario:</strong> <?php echo round(($stats['tardanzas_mes'] ?? 0) / date('j'), 1); ?></p>
+                            <p><strong><i class="fas fa-exclamation-triangle"></i> Total Tardanzas:</strong> <?php echo ($estadisticas['tardanzas_mes'] ?? 0); ?></p>
+                            <p><strong><i class="fas fa-chart-line"></i> Promedio Diario:</strong> <?php echo round(($estadisticas['tardanzas_mes'] ?? 0) / date('j'), 1); ?></p>
                             <p><strong><i class="fas fa-calendar-check"></i> Días Transcurridos:</strong> <?php echo date('j'); ?> de <?php echo date('t'); ?></p>
                         </div>
                     </div>
@@ -417,8 +413,3 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
-<?php
-$contenido = ob_get_clean();
-include __DIR__ . '/../layouts/main.php';
-?>

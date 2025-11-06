@@ -15,44 +15,49 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     
     <!-- Estilos principales -->
-    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <!-- Header Component -->
-    <?php include __DIR__ . '/header.php'; ?>
-    
-    <!-- Sidebar Component -->
-    <?php include __DIR__ . '/sidebar.php'; ?>
-    
-    <!-- Main Content Area -->
-    <div class="main-content" id="main-content">
-        <div class="container">
-            <div class="breadcrumb">
-                <strong>Panel <?php echo ucfirst($usuario['rol'] ?? 'Usuario'); ?></strong> / <?php echo $seccion ?? 'Dashboard'; ?>
+    <div class="layout-container">
+        <!-- Sidebar Component -->
+        <?php include __DIR__ . '/sidebar.php'; ?>
+        
+        <!-- Main Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- Header Component -->
+            <?php include __DIR__ . '/header.php'; ?>
+            
+            <!-- Main Content Area -->
+            <div class="main-content" id="main-content">
+                <div class="container">
+                    <div class="breadcrumb">
+                        <strong>Panel <?php echo ucfirst($usuario['rol'] ?? 'Usuario'); ?></strong> / <?php echo $seccion ?? 'Dashboard'; ?>
+                    </div>
+                    
+                    <div class="content">
+                        <?php if (isset($mensaje)): ?>
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i>
+                                <?php echo htmlspecialchars($mensaje); ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if (isset($error)): ?>
+                            <div class="alert alert-error">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <?php echo htmlspecialchars($error); ?>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php echo $contenido; ?>
+                    </div>
+                </div>
             </div>
             
-            <div class="content">
-                <?php if (isset($mensaje)): ?>
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <?php echo htmlspecialchars($mensaje); ?>
-                    </div>
-                <?php endif; ?>
-                
-                <?php if (isset($error)): ?>
-                    <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <?php echo htmlspecialchars($error); ?>
-                    </div>
-                <?php endif; ?>
-                
-                <?php echo $contenido; ?>
-            </div>
+            <!-- Footer Component -->
+            <?php include __DIR__ . '/footer.php'; ?>
         </div>
     </div>
-    
-    <!-- Footer Component -->
-    <?php include __DIR__ . '/footer.php'; ?>
     
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -65,6 +70,6 @@
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     
     <!-- JavaScript principal -->
-    <script src="/public/js/main.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>

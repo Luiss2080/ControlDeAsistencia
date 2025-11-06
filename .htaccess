@@ -1,10 +1,12 @@
 RewriteEngine On
 
-# Redireccionar archivos estáticos a la carpeta public
+# Servir archivos estáticos directamente desde public (sin redirección infinita)
 RewriteCond %{REQUEST_URI} \.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ [NC]
+RewriteCond %{REQUEST_URI} !^/ControlDeAsistencia/public/
 RewriteRule ^(.*)$ public/$1 [L]
 
 # Redireccionar todas las demás peticiones al index.php en la raíz
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ [NC]
 RewriteRule ^(.*)$ index.php [QSA,L]

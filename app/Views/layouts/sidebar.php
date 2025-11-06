@@ -10,6 +10,17 @@ $paginaActual = $_SERVER['REQUEST_URI'] ?? '';
 ?>
 
 <aside class="sidebar" id="sidebar">
+    <!-- Logo del Sistema -->
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fas fa-building"></i>
+            <span class="sidebar-title">Sistema de Asistencia</span>
+        </div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </div>
+    
     <ul class="sidebar-menu">
         <!-- Menú común para todos los roles -->
         <li>
