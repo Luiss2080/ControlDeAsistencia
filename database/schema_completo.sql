@@ -21,59 +21,6 @@ SET time_zone = "+00:00";
 -- Base de datos: `control_asistencia`
 --
 
-DELIMITER $$
---
--- Funciones
---
-CREATE DEFINER=`root`@`localhost` FUNCTION `determinar_tipo_marcacion` (`p_usuario_id` INT, `p_fecha_hora` TIMESTAMP) RETURNS VARCHAR(10) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci DETERMINISTIC READS SQL DATA BEGIN
-    DECLARE ultima_marcacion VARCHAR(10) DEFAULT NULL;
-    DECLARE tiempo_desde_ultima INT DEFAULT 0;
-    DECLARE minutos_minimos INT DEFAULT 5;
-    
-    
-    SELECT CAST(valor AS UNSIGNED) INTO minutos_minimos 
-    FROM configuracion_sistema 
-    WHERE clave = 'minutos_entre_marcaciones';
-    
-    
-    SELECT tipo INTO ultima_marcacion
-    FROM asistencias 
-    WHERE usuario_id = p_usuario_id 
-      AND fecha_hora >= DATE_SUB(p_fecha_hora, INTERVAL 24 HOUR)
-      AND fecha_hora < p_fecha_hora
-    ORDER BY fecha_hora DESC 
-    LIMIT 1;
-    
-    
-    IF ultima_marcacion IS NOT NULL THEN
-        SELECT TIMESTAMPDIFF(MINUTE, 
-            (SELECT fecha_hora FROM asistencias 
-             WHERE usuario_id = p_usuario_id 
-               AND fecha_hora >= DATE_SUB(p_fecha_hora, INTERVAL 24 HOUR)
-               AND fecha_hora < p_fecha_hora
-             ORDER BY fecha_hora DESC LIMIT 1),
-            p_fecha_hora
-        ) INTO tiempo_desde_ultima;
-        
-        
-        IF tiempo_desde_ultima < minutos_minimos THEN
-            RETURN 'duplicada';
-        END IF;
-        
-        
-        IF ultima_marcacion = 'entrada' THEN
-            RETURN 'salida';
-        ELSE
-            RETURN 'entrada';
-        END IF;
-    ELSE
-        
-        RETURN 'entrada';
-    END IF;
-END$$
-
-DELIMITER ;
-
 -- --------------------------------------------------------
 
 --
@@ -186,6 +133,60 @@ CREATE TABLE `logs_sistema` (
   `user_agent` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Funciones
+--
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` FUNCTION `determinar_tipo_marcacion` (`p_usuario_id` INT, `p_fecha_hora` TIMESTAMP) RETURNS VARCHAR(10) CHARSET utf8mb4 COLLATE utf8mb4_unicode_ci DETERMINISTIC READS SQL DATA BEGIN
+    DECLARE ultima_marcacion VARCHAR(10) DEFAULT NULL;
+    DECLARE tiempo_desde_ultima INT DEFAULT 0;
+    DECLARE minutos_minimos INT DEFAULT 5;
+    
+    
+    SELECT CAST(valor AS UNSIGNED) INTO minutos_minimos 
+    FROM configuracion_sistema 
+    WHERE clave = 'minutos_entre_marcaciones';
+    
+    
+    SELECT tipo INTO ultima_marcacion
+    FROM asistencias 
+    WHERE usuario_id = p_usuario_id 
+      AND fecha_hora >= DATE_SUB(p_fecha_hora, INTERVAL 24 HOUR)
+      AND fecha_hora < p_fecha_hora
+    ORDER BY fecha_hora DESC 
+    LIMIT 1;
+    
+    
+    IF ultima_marcacion IS NOT NULL THEN
+        SELECT TIMESTAMPDIFF(MINUTE, 
+            (SELECT fecha_hora FROM asistencias 
+             WHERE usuario_id = p_usuario_id 
+               AND fecha_hora >= DATE_SUB(p_fecha_hora, INTERVAL 24 HOUR)
+               AND fecha_hora < p_fecha_hora
+             ORDER BY fecha_hora DESC LIMIT 1),
+            p_fecha_hora
+        ) INTO tiempo_desde_ultima;
+        
+        
+        IF tiempo_desde_ultima < minutos_minimos THEN
+            RETURN 'duplicada';
+        END IF;
+        
+        
+        IF ultima_marcacion = 'entrada' THEN
+            RETURN 'salida';
+        ELSE
+            RETURN 'entrada';
+        END IF;
+    ELSE
+        
+        RETURN 'entrada';
+    END IF;
+END$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
