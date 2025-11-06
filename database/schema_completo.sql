@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 04-11-2025 a las 14:03:01
+-- Tiempo de generación: 06-11-2025 a las 16:57:57
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.1.25
 
@@ -172,6 +172,24 @@ INSERT INTO `dispositivos` (`id`, `nombre`, `ubicacion`, `token_dispositivo`, `i
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `logs_sistema`
+--
+
+CREATE TABLE `logs_sistema` (
+  `id` int(11) NOT NULL,
+  `usuario_id` int(11) DEFAULT NULL,
+  `accion` varchar(50) NOT NULL,
+  `tabla_afectada` varchar(100) DEFAULT NULL,
+  `id_registro` int(11) DEFAULT NULL,
+  `descripcion` text DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura Stand-in para la vista `reporte_asistencia_diaria`
 -- (Véase abajo para la vista actual)
 --
@@ -231,36 +249,19 @@ CREATE TABLE `usuarios` (
   `password_hash` varchar(255) NOT NULL,
   `rol` enum('admin','rrhh','empleado') DEFAULT 'empleado',
   `activo` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ultimo_login` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Volcado de datos para la tabla `usuarios`
 --
 
-INSERT INTO `usuarios` (`id`, `numero_empleado`, `nombres`, `apellidos`, `email`, `telefono`, `puesto`, `fecha_ingreso`, `horario_entrada`, `horario_salida`, `password_hash`, `rol`, `activo`, `created_at`) VALUES
-(1, 'ADM001', 'Administrador', 'del Sistema', 'admin@empresa.com', NULL, 'Administrador', '2025-11-01', '08:00:00', '17:00:00', '$2y$10$4tw1iNEByr/MJufYn40zxewaGojYqzSTi9ZaBP9PZod2vxuFQuoma', 'admin', 1, '2025-11-02 01:47:13'),
-(2, 'RH001', 'MarÝa', 'GarcÝa', 'rrhh@empresa.com', NULL, 'Jefe de RRHH', '2025-11-01', '08:00:00', '17:00:00', '$2y$10$IVzEhZp9Pu4pQceTU9ujkOl0lcIgKiWVkK3QZB02c2ruiEVg/aIpK', 'rrhh', 1, '2025-11-02 01:47:43'),
-(3, 'EMP001', 'Juan', 'PÚrez', 'juan@empresa.com', NULL, 'Empleado', '2025-11-01', '08:00:00', '17:00:00', '$2y$10$y10dYg22VgmUmLl3gkLDnuLAIM2N9GXtUqzzqo1eBY4h5m/RF4JVu', 'empleado', 1, '2025-11-02 01:48:19');
+INSERT INTO `usuarios` (`id`, `numero_empleado`, `nombres`, `apellidos`, `email`, `telefono`, `puesto`, `fecha_ingreso`, `horario_entrada`, `horario_salida`, `password_hash`, `rol`, `activo`, `created_at`, `ultimo_login`) VALUES
+(1, 'ADM001', 'Administrador', 'del Sistema', 'admin@empresa.com', NULL, 'Administrador', '2025-11-01', '08:00:00', '17:00:00', '$2y$10$4tw1iNEByr/MJufYn40zxewaGojYqzSTi9ZaBP9PZod2vxuFQuoma', 'admin', 1, '2025-11-02 01:47:13', '2025-11-04 15:21:40'),
+(2, 'RH001', 'MarÝa', 'GarcÝa', 'rrhh@empresa.com', NULL, 'Jefe de RRHH', '2025-11-01', '08:00:00', '17:00:00', '$2y$10$IVzEhZp9Pu4pQceTU9ujkOl0lcIgKiWVkK3QZB02c2ruiEVg/aIpK', 'rrhh', 1, '2025-11-02 01:47:43', NULL),
+(3, 'EMP001', 'Juan', 'PÚrez', 'juan@empresa.com', NULL, 'Empleado', '2025-11-01', '08:00:00', '17:00:00', '$2y$10$y10dYg22VgmUmLl3gkLDnuLAIM2N9GXtUqzzqo1eBY4h5m/RF4JVu', 'empleado', 1, '2025-11-02 01:48:19', NULL);
 
-👨‍💼 ADMINISTRADOR
-Email: admin@empresa.com
-Contraseña: admin123
-Rol: admin
-Panel: /admin/dashboard
-Funciones: Gestión completa del sistema
-👩‍💼 RECURSOS HUMANOS
-Email: rrhh@empresa.com
-Contraseña: rrhh123
-Rol: rrhh
-Panel: /rrhh/dashboard
-Funciones: Reportes y análisis de asistencia
-👨‍💻 EMPLEADO
-Email: juan@empresa.com
-Contraseña: emp123
-Rol: empleado
-Panel: /empleado/dashboard
-Funciones: Consulta de asistencia personal
 -- --------------------------------------------------------
 
 --
@@ -334,6 +335,13 @@ ALTER TABLE `dispositivos`
   ADD KEY `idx_token_dispositivo` (`token_dispositivo`);
 
 --
+-- Indices de la tabla `logs_sistema`
+--
+ALTER TABLE `logs_sistema`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `usuario_id` (`usuario_id`);
+
+--
 -- Indices de la tabla `tarjetas_rfid`
 --
 ALTER TABLE `tarjetas_rfid`
@@ -381,6 +389,12 @@ ALTER TABLE `dispositivos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
+-- AUTO_INCREMENT de la tabla `logs_sistema`
+--
+ALTER TABLE `logs_sistema`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `tarjetas_rfid`
 --
 ALTER TABLE `tarjetas_rfid`
@@ -402,6 +416,12 @@ ALTER TABLE `usuarios`
 ALTER TABLE `asistencias`
   ADD CONSTRAINT `asistencias_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`),
   ADD CONSTRAINT `asistencias_ibfk_2` FOREIGN KEY (`dispositivo_id`) REFERENCES `dispositivos` (`id`);
+
+--
+-- Filtros para la tabla `logs_sistema`
+--
+ALTER TABLE `logs_sistema`
+  ADD CONSTRAINT `logs_sistema_ibfk_1` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL;
 
 --
 -- Filtros para la tabla `tarjetas_rfid`
